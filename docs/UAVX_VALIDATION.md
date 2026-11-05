@@ -2,7 +2,7 @@
 
 Candidate update: 345 targeted tests passed in the clean environment. The latest
 movement/landing candidate is running its full matrix in
-`evidence/resilience-release-matrix-20261105`. Until that completes, the full
+`evidence/resilience-handoff-matrix-20261105`. Until that completes, the full
 matrix numbers below describe the previous source snapshot, not this candidate.
 
 The current release completed all **19 declared development cases**: **15 pass

@@ -119,7 +119,7 @@ def test_movement_admission_preserves_second_path_while_column_deploys():
     assert sim._reachable_count(ahead,positions)==sim._reachable_count(positions)==4
 
 
-def test_movement_protection_counts_only_paths_retained_through_interval():
+def test_backup_handoff_can_change_edges_while_primary_path_is_retained():
     sim=ResilientUAVXSimulator(near_config(camera_mode='footprint'))
     for uid,u in sim.state.uavs.items():
         if uid>=4:
@@ -128,9 +128,12 @@ def test_movement_protection_counts_only_paths_retained_through_interval():
     positions[:4]=[(40.,0.,40.),(80.,0.,40.),(120.,0.,40.),(160.,0.,40.)]
     exchanged=positions.copy();exchanged[[1,2]]=exchanged[[2,1]]
     assert sim._reachable_count(exchanged)==sim._reachable_count(positions)
-    # Endpoint graphs have redundancy but cannot lend one another edges that
-    # are absent in the conservative graph used for continuous motion.
-    assert sim._reachable_count(exchanged,positions)<sim._reachable_count(positions)
+    # The protected endpoint may use new backup edges, while an end-to-end
+    # primary path must remain in the intersection for the whole interval.
+    assert sim._reachable_nodes(exchanged,positions)=={0,1,2,3}
+    assert sim._reachable_count(exchanged,positions)==sim._reachable_count(positions)
+    disconnected=positions.copy();disconnected[:4,0]+=500.
+    assert sim._reachable_count(disconnected,positions)<sim._reachable_count(positions)
 
 
 def test_moving_scout_cannot_outrun_its_second_relay_path():

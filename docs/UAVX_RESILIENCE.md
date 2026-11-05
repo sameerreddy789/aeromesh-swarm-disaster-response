@@ -17,11 +17,13 @@ default. The earlier footprint-only profile remains available without this flag.
   graph is sampled for two internally node-disjoint paths to the GCS. Merely
   enabling protection is not treated as proof that every moving UAV is protected.
 - Motion admission also preserves existing redundant GCS paths during ordinary
-  deployment, replacement and task changes. A conservative graph retains only
-  edges present at both ends of the movement interval. Reachability takes
-  precedence, then biconnectivity; the existing emergency-return reserve can
+  deployment, replacement and task changes. Primary reachability uses only
+  edges present throughout the movement interval; backup links may hand over
+  to new neighbors and are evaluated at the proposed endpoint. Reachability
+  takes precedence, then biconnectivity; the emergency-return reserve can
   override this guard. Actual downtime and path protection are still measured
-  independently, and arbitrary failures are not guaranteed survivable.
+  independently. Two-path protection at every intermediate instant and arbitrary
+  failure survivability are not guaranteed.
 - Priority remains dominant. When the current task finishes, equally urgent
   announced tasks are selected by proximity to the previous task, reducing
   unnecessary full-map travel. Future task positions are excluded from selection.

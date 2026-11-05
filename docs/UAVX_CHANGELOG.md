@@ -12,7 +12,8 @@ checkouts were preserved; implementation lives in a separate AeroMesh-UAVX clone
   selection within priority, 22 m planning separation and configurable charging.
 - Fixed a late link-failure regression caused by replacement relays spreading
   apart during a priority change. Ordinary movement now retains existing
-  redundant GCS paths using edges available throughout the proposed interval;
+  primary GCS reachability throughout the interval and evaluates backup paths at
+  the proposed endpoint, allowing backup links to hand over to new neighbors;
   the emergency-return override and independently measured checks remain intact.
   The original failed run is preserved with its source snapshot.
 - Fixed a landing approach that remained latched after avoidance displaced a

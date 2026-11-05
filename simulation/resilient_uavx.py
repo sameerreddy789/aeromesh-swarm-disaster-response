@@ -144,21 +144,35 @@ class ResilientUAVXSimulator(UAVXSimulator):
         ids = [-1, *live]
         points = np.vstack([np.zeros(3), positions[live]])
         adjacent = np.linalg.norm(points[:,None,:]-points[None,:,:], axis=2) <= 100+1e-8
+        conservative = None
         if reference_positions is not None:
             reference = np.vstack([np.zeros(3), reference_positions[live]])
-            # A retained edge exists at both ends of the linear interval, so it
-            # also exists throughout. New endpoint-only links cannot disguise
-            # a temporary loss of the second path while vehicles are moving.
-            adjacent &= np.linalg.norm(reference[:,None,:]-reference[None,:,:], axis=2) <= 100+1e-8
+            # Continuous primary connectivity still uses edges retained across
+            # the entire interval. Backup links may hand over to new neighbors;
+            # requiring an identical backup graph can stall a changing swarm.
+            conservative = adjacent & (np.linalg.norm(reference[:,None,:]-reference[None,:,:], axis=2) <= 100+1e-8)
         indices = {uid:index for index,uid in enumerate(ids)}
         for first,second in blocked_edges:
             if first in indices and second in indices:
                 a,b = indices[first],indices[second]
                 adjacent[a,b] = adjacent[b,a] = False
+                if conservative is not None:
+                    conservative[a,b] = conservative[b,a] = False
         # This hook is only the motion admission score, never an availability
         # metric. Connectivity remains dominant; within a connected component
         # retain redundant paths during deployments, replacements and pivots.
-        return _protected_graph_score(adjacent, len(self.flights))
+        endpoint_score = _protected_graph_score(adjacent, len(self.flights))
+        if conservative is None:
+            return endpoint_score
+        reached = np.zeros(len(ids), dtype=bool)
+        reached[0] = True
+        while True:
+            expanded = reached | np.any(conservative[reached], axis=0)
+            if np.array_equal(expanded, reached):
+                break
+            reached = expanded
+        width = len(self.flights)+1
+        return (int(reached.sum())-1)*width + endpoint_score % width
 
     def _prepare_output(self, output):
         self._output = output
