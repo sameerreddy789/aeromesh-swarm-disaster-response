@@ -5,9 +5,9 @@ This preserves earlier claims and failures; it is not current acceptance evidenc
 # AeroMesh-Swarm: Stage 1 Submission Package
 ## UAV Swarm Disaster Response Challenge - Preliminary Design Verification
 
-**Submission Date:** September 14, 2026  
-**Author / Developer:** Naga Surya Dinesh (Solo Developer)  
-**Project Name:** AeroMesh-Swarm  
+**Submission Date:** September 14, 2026\
+**Author / Developer:** Naga Surya Dinesh (Solo Developer)\
+**Project Name:** AeroMesh-Swarm\
 **Repository:** `uav_swarm_disaster_response/`
 
 ---
@@ -213,9 +213,9 @@ README.md                  (2,100 words)  - Project overview & quick start
 
 ## 📞 Contact Information
 
-**Primary Contact:** Naga Surya Dinesh  
-**Project Repository:** `uav_swarm_disaster_response/`  
-**Submission Date:** September 14, 2026  
+**Primary Contact:** Naga Surya Dinesh\
+**Project Repository:** `uav_swarm_disaster_response/`\
+**Submission Date:** September 14, 2026\
 
 ---
 
