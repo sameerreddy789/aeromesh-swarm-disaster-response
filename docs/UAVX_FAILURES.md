@@ -1,96 +1,116 @@
 # Current failures and open gaps — 5 November 2026
 
-The two final nominal runs pass all implemented sample checks. The following
-failures and limitations remain; successful PoI reporting does not erase them.
-Exact measurements and reproduction commands are in [validation](UAVX_VALIDATION.md).
+The last complete matrix, before the latest movement and landing fixes, passed
+**15 of 19 declared development cases**. All 19 produced internally consistent evidence with no verifier errors
+and unchanged recorded sources. Four cases still fail constraints; the full
+matrix does not pass. The current candidate has 345 passing targeted tests; its
+full 19-case rerun is still in progress. Exact commands, all case results and local evidence paths
+are in [validation](UAVX_VALIDATION.md).
 
-## Observed failures in the final fault runs
+The release adds bounded radio service, rendered scene-camera imagery delivered
+through the mesh, explicit fault scenarios and denser relay placement. These
+replace several limitations of the earlier footprint-only proof of concept.
+See [implementation and assumptions](UAVX_RESILIENCE.md) for their actual scope.
 
-| Case | Failed checks | Evidence / consequence |
+## Observed failures in the current matrix
+
+| Case | Failed checks | Measured consequence |
 |---|---|---|
-| 30 s radio outage, seed 42 | continuous_connectivity | 30.0 s downtime; 98.4248% availability. Fresh delivery from the surviving source group recovers in 8.0 s, which does not restore every UAV's connectivity. |
-| Permanent UAV failure, seed 42 | continuous_connectivity, all_uavs_landed, mission_deadline | 3.151142 s downtime; the failed UAV remains stranded. All 10 PoIs are surveyed/reported, but the mission has no valid completion at the 2700 s cutoff. |
+| `radio-outage-seed42` | `continuous_connectivity` | Disabling UAV 36's sole radio for 30 s produces 30.0 s downtime and 98.5041% availability. All 10 images arrive within 10 s of detection and the mission finishes at 2007.0 s. Affected surviving-source service is confirmed after 6.5 s; the disabled endpoint remains disconnected until its radio returns. |
+| `permanent-failure-seed42` | `all_uavs_landed`, `mission_deadline` | UAV 36 remains permanently immobile. The 59 operational survivors maintain 100% measured connectivity, deliver all 10 images and finish returning by 1992.5 s. Strict completion remains null at the 2700 s cutoff because the failed UAV never lands. |
+| `resource30-seed42` | `all_pois_surveyed_and_reported`, `mission_deadline`, `continuous_connectivity`, `reporting_deadline`, `imagery_received` | The protected planner with 30 UAVs and 30 charging pads completes only 7/10 PoIs/images by 2700 s. Downtime is 377.138294 s and availability is 85.5392%. All operational UAVs land, but missing surveys/reports prevent completion. |
+| `late-link-seed42` | `continuous_connectivity`, `reporting_deadline` | The 30 s link outage at t=1600 s produces 34.399303 s total downtime and 98.2609% availability. PoI 9 is detected at 1615.0 s and fully received at 1638.5 s: a 23.5 s delay. All 10 images ultimately arrive and the fleet lands by 1979.5 s; that does not erase the missed deadline. |
 
-All four final runs have zero measured battery exhaustions, collision pairs,
-separation/geofence violations and reporting-deadline misses. Those statements
-apply only to the tested abstract model. Earlier development failures are
-retained locally and described in the [changelog](UAVX_CHANGELOG.md).
+The link-outage cases at t=180 s and t=900 s pass all 14 implemented checks. The
+late-link failure shows that the moving and replacing relay network is not
+continuously protected in every phase. The next engineering target is preserving
+an alternate path during that transition without exceeding range, separation,
+energy or fleet constraints. Settled-topology redundancy alone is insufficient.
 
-## Unresolved implementation and qualification gaps
+For the 30-UAV case, already received images have a maximum delay of 6.0 s and
+no detected image is recorded as late. The reporting check still fails because
+three PoIs lack detection/report evidence. Missing reports are not successful
+low-latency service.
 
-1. **Limited scenario coverage:** two nominal seeds and two single-fault cases
-   are insufficient to establish hidden-scenario robustness. The greedy planner
-   is not complete; resource shortages or other geometries can stall it.
-2. **Fleet and staging assumptions:** the benchmark uses 30 aircraft, 25 m home
-   pad spacing, a declared staging geofence and assumed recharge capacity. An
-   18-aircraft development run did not complete coverage. Organizer acceptance
-   of these resources and geometry is not established.
-3. **No physical flight dynamics:** point vehicles follow linear kinematic
-   segments. Acceleration, wind, terrain, finite vehicle volume and tracking
-   error are absent. Minimum separation is only about 20.0005 m, leaving no
-   demonstrated physical-control margin beyond the required 20 m.
-4. **Simplified radio:** independent loss and a hard distance cutoff do not
-   capture interference propagation, obstacles, bandwidth contention or a
-   practical radio stack. Parallel packet service is unbounded.
-5. **Centralized state access:** planner and routing use global simulation
-   information. A distributed protocol operating with stale/lost state has not
-   been implemented or qualified in this profile.
-6. **Synthetic perception:** task coordinates are announced to the planner and
-   geometric proximity produces detections. Survivor-recognition accuracy,
-   real camera processing and sensor uncertainty are unmeasured.
-7. **Uncalibrated energy:** constant endurance and a 720 s full-recharge
-   assumption do not establish an airframe battery/charging design.
-8. **Permanent-failure recovery:** a failed aircraft freezes and remains a
-   collision obstacle. The simulation cannot recover or land that vehicle.
-9. **Backend integration:** the legacy AeroMesh adapter acknowledges commands
-   without actual execution. Garuda's current single-client scene reload is
-   unsuitable for independent clients controlling a swarm. No multi-UAV
-   PX4/ROS/ProjectAirSim integration or hardware-in-loop result is claimed.
-10. **Evidence limits:** hashes and cross-checks detect missing/inconsistent
-    artifacts; they are not independent dynamics verification or protection
-    against coordinated edits to both logs and hashes. Trajectory export is
-    sampled every 2 s; runtime safety uses the finer 0.5 s movement intervals.
-11. **Legacy checkout issue:** the root tracks `aeromesh-swarm-disaster-response`
-    as a Git submodule pointer (`7cf5a89`) without a `.gitmodules` mapping. The
-    required nested source cannot be resolved from that metadata alone. The
-    UAV-X profile does not use it; the draft package records its pointer without
-    claiming to bundle the nested repository's contents.
+Across all 19 cases, measured battery exhaustions, collision pairs, separation
+violations and geofence violations are zero. Minimum separation is 22.000024 m;
+the longest sortie is 1123.0 s. These safety results apply only to the tested
+kinematic model and do not turn the four failed missions into passes.
 
-## Submission gaps
+## Remaining model and qualification limits
 
-- Team name/registration ID, members, institution, eligibility and qualification
-  status have not been supplied; the report leaves them explicitly incomplete.
-- Organizer-issued Stage 2 scenarios and a required log schema were not supplied.
-  The current JSON format is a project format, not claimed organizer compliance.
-- The report and trajectory demo are drafts. Final review and an evaluator-
-  accessible video link remain outstanding. No external submission was sent.
-- The supplied PDF specifies email submission while the message contains a Forms
-  URL. The submission route requires resolution through official instructions.
-- Historical MIT references are unsupported by a root LICENSE in the original
-  AeroMesh tree; its owner needs to resolve the licensing terms.
-- PR delivery is blocked by the connected GitHub credential: the branch was
-  pushed to `sameerreddy789:codex/uavx-submission`, but GitHub rejected
-  `CreatePullRequest` for missing permissions (the REST route also returned 404).
-  No PR was created. The prepared PR description is included in the local draft
-  package; creation needs an account/credential with the required PR access.
+1. **Resource feasibility is unresolved.** Passing examples use 60 UAVs,
+   60 charging pads, 25 m pad spacing and a declared staging area. The explicit
+   30-UAV case fails. Organizer acceptance of these resources and geometry is
+   not established; team size is not a UAV allowance.
+2. **Fault robustness is incomplete.** The matrix covers 12 nominal seeds,
+   three link-outage timings, one radio outage, one permanent failure, one
+   resource reduction and one higher-loss case. It does not establish arbitrary
+   multi-fault, terrain or unseen-scenario robustness. The late-link failure is
+   an observed planning limitation, not merely an untested possibility.
+3. **Motion remains kinematic.** Vehicles follow linear point-state segments;
+   thrust, acceleration, wind, finite airframe volume and tracking error are not
+   modeled. The larger separation margin is not a physical-controller guarantee.
+   No PX4/ROS/ProjectAirSim flight backend or hardware result is claimed.
+4. **Radio service is bounded but links remain idealized.** Per-node shared
+   TX/RX bandwidth, queue limits, retries and serialized image bytes are accounted
+   for. Obstacle RF propagation and interference between disjoint links are not
+   calibrated. Grounded/charging radios remain usable, with external charging
+   power assumed. These are explicit simulation assumptions.
+5. **Sensing is rendered simulation imagery.** Panda3D TinyDisplay supplies
+   images from generated disaster scenery at the supplied kinematic camera pose.
+   Source, timestamps, intrinsics, bytes and GCS reassembly are traced. A physical
+   camera, learned survivor recognition and perception accuracy are unqualified.
+6. **Energy and charging remain assumptions.** Endurance is a conservative time
+   budget, and full recharge takes 720 s in the examples. Finite charging slots
+   are enforced; this does not establish an airframe battery/charging design.
+7. **Coordination is centralized.** The planner uses global simulation state.
+   A distributed protocol with stale/lost planning state is not implemented. The
+   supplied report template permits centralized coordination with justification;
+   decentralization is not being invented as a mandatory rule.
+8. **Fault meanings must stay explicit.** Relays cannot communicate with a
+   completely disabled sole radio. A frozen aircraft cannot land. Separate
+   survivor metrics never replace strict all-UAV checks. Organizer scoring of
+   these events remains unconfirmed.
+9. **Evidence verification has limits.** It checks hashes, image reconstruction,
+   radio-service bounds and consistency with survey/receipt/landing timestamps.
+   It is not independent dynamics reconstruction or protection against
+   coordinated edits to logs and hashes.
+10. **Legacy metadata remains unresolved.** The root tracks
+    `aeromesh-swarm-disaster-response` as a Git submodule pointer (`7cf5a89`)
+    without a `.gitmodules` mapping. Its nested contents are not needed by this
+    profile and are not claimed bundled by the source snapshot.
 
-## Errors already corrected
+## Submission and ownership dependencies
 
-The implementation fixes the undefined `dt` crash and CLI mismatch, fabricated
-legacy metric/verification success, omitted no-route traffic in PDR, multiple-hop
-forwarding within one tick, incorrect hop limits, premature recovery counts,
-latched mission completion, false empty/failed-fleet landing, orphaned/returning
-relay replacements, deleted-slot promotion/KeyError, excessive-speed candidates,
-landing oscillation, premature landing timestamps and fault-event argument crash.
-The verifier now rejects incomplete artifact manifests and contradictory claims.
-These corrected errors are not listed as outstanding failures.
+- Team name/registration, members, institution, eligibility and Stage 2
+  qualification have not been supplied.
+- Organizer scenarios, communication assumptions and the standardized log schema
+  were not supplied. Schema 2 is a project evidence format.
+- Acceptance of this custom kinematic/Panda3D framework and its resources as an
+  equivalent simulation setup has not been established.
+- Final report/video review, team contributions and an evaluator-accessible video
+  link remain pending. Generated documents remain drafts.
+- The supplied PDF specifies email submission while the original message contains
+  a Forms URL. The currently applicable route requires confirmation.
+- Historical MIT references lack a root LICENSE in the original repository; its
+  owner must determine the applicable license.
+- The branch has been pushed, but the connected GitHub credential has not been
+  able to create the PR. Prepared PR text does not establish a created PR.
+- No email, organizer message or competition submission has been sent.
 
-Follow-up: recovery now detects disconnected groups that retain local neighbors
-but have no GCS path. With the live GUI added, the targeted suite passes 172 tests,
-and four current full runs
-retain the results above. This corrects a detection gap; it does not restore a
-disabled sole radio or land a permanently failed aircraft.
+## Historical results and corrected issues
 
-The live AeroMesh desktop window now runs this profile and has completed a full
-nominal mission. It resolves the missing live visualization, while the physics,
-radio, perception and fault-model limits above remain. See [GUI notes](UAVX_GUI.md).
+Earlier 30-UAV results, including the 172-test live-GUI release, remain in
+[gui-benchmark-summary.json](verification/uavx/gui-benchmark-summary.json) and the
+previous delivery update. The partition-recovery baseline remains in
+[benchmark-summary.json](verification/uavx/benchmark-summary.json). Their
+footprint-only sensing, unbounded parallel radio service and older source hashes
+must not be presented as the current release's validation.
+
+Current fixes include bounded service/queues, immutable serialized packet sizes,
+complete image receipt instead of first-fragment success, strict scenario input,
+explicit missed-fault checks, failed-carrier recapture with the original deadline
+retained, and charging-slot accounting within each timestep. Earlier CLI/crash,
+packet-provenance, landing and false-success corrections remain in the
+[changelog](UAVX_CHANGELOG.md). They do not remove the four current failures.

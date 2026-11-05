@@ -65,15 +65,20 @@ def main():
     parser.add_argument("--repeat", action="store_true", help="Repeat GUI missions in separate numbered evidence folders")
     parser.add_argument("--auto-close", action="store_true", help="Close GUI after this run, useful for verification")
     parser.add_argument("--profile", choices=["uavx", "legacy"], default="uavx")
-    parser.add_argument("--fleet-size", type=int, default=30)
-    parser.add_argument("--packet-loss", type=float, default=0.02)
+    parser.add_argument("--fleet-size", type=int, default=None)
+    parser.add_argument("--packet-loss", type=float, default=None)
+    parser.add_argument("--scenario-file", type=Path, help="Validated UAV-X JSON scenario with resources, sensing and faults")
     parser.add_argument("--disturbance", choices=["none", "outage", "failure"], default="none")
     parser.add_argument("--scenario", type=int, choices=BUILDERS, default=1)
     parser.add_argument("--benchmark-all", action="store_true")
-    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--max-time", type=float, default=None)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
+    if args.scenario_file and args.profile != 'uavx':
+        parser.error('--scenario-file requires --profile uavx')
+    if args.scenario_file and args.disturbance != 'none':
+        parser.error('Configure faults inside --scenario-file; do not combine it with --disturbance')
     if (args.gui and args.profile != 'uavx') or ((args.repeat or args.auto_close) and not args.gui):
         parser.error('--gui/--repeat/--auto-close require the UAV-X GUI profile')
     if args.repeat and args.auto_close:
@@ -87,6 +92,25 @@ def main():
         if args.benchmark_all:
             parser.error("--benchmark-all applies to --profile legacy")
         from simulation.uavx import UAVXSimulator
+        scenario_config = None
+        if args.scenario_file:
+            from dataclasses import replace
+            from simulation.uavx_scenario import load_scenario
+            from simulation.resilient_uavx import ResilientUAVXSimulator
+            try:
+                scenario_config = load_scenario(args.scenario_file)
+                overrides = {name: getattr(args,name) for name in ('seed','fleet_size','packet_loss')
+                             if getattr(args,name) is not None}
+                scenario_config = replace(scenario_config, **overrides)
+            except (ValueError, OSError) as exc:
+                parser.error(str(exc))
+        def make_simulator():
+            if scenario_config is not None:
+                return ResilientUAVXSimulator(scenario_config)
+            return UAVXSimulator(seed=args.seed if args.seed is not None else 42,
+                                 fleet_size=args.fleet_size if args.fleet_size is not None else 30,
+                                 packet_loss=args.packet_loss if args.packet_loss is not None else .02,
+                                 disturbance=args.disturbance)
         if args.gui:
             try:
                 from visualization.uavx_gui import UAVXVisualizer
@@ -97,31 +121,31 @@ def main():
             try:
                 while True:
                     folder=args.output if iteration==1 else args.output.with_name(f'{args.output.name}-{iteration:03d}')
-                    sim=UAVXSimulator(seed=args.seed,fleet_size=args.fleet_size,
-                                      packet_loss=args.packet_loss,disturbance=args.disturbance)
+                    sim=make_simulator()
                     report=sim.run(folder,args.max_time,observer=viewer)
                     print(json.dumps({'output':str(folder),'completion_time_s':report['completion_time_s'],
                                       'checks':report['checks']},indent=2),flush=True)
                     if not viewer.wait_at_end(repeat=args.repeat,auto_close=args.auto_close):
                         break
                     iteration+=1
+            except (ValueError, FileExistsError, RuntimeError) as exc:
+                parser.error(str(exc))
             finally:
                 viewer.close()
             if args.require_pass and not report['sample_constraints_passed']:
                 raise SystemExit(2)
             return
         try:
-            sim = UAVXSimulator(seed=args.seed, fleet_size=args.fleet_size,
-                                packet_loss=args.packet_loss, disturbance=args.disturbance)
+            sim = make_simulator()
             report = sim.run(args.output, args.max_time)
-        except (ValueError, FileExistsError) as exc:
+        except (ValueError, FileExistsError, RuntimeError) as exc:
             parser.error(str(exc))
         print(json.dumps(report, indent=2, allow_nan=False))
         if args.require_pass and not report["sample_constraints_passed"]:
             raise SystemExit(2)
         return
     for scenario in BUILDERS if args.benchmark_all else [args.scenario]:
-        report = run(scenario, args.seed, args.max_time, args.output / f"scenario-{scenario}")
+        report = run(scenario, args.seed if args.seed is not None else 42, args.max_time, args.output / f"scenario-{scenario}")
         print(json.dumps({"scenario": scenario, "mission": report["mission"], "communication": report["communication"]}))
 
 

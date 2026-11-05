@@ -1,0 +1,7 @@
+# Exact minimal versions used for the current Windows development qualification.
+numpy==1.26.4
+networkx==3.4.2
+pytest==8.4.2
+pygame==2.6.1
+panda3d==1.10.16
+Pillow==12.3.0

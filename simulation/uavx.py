@@ -82,8 +82,8 @@ class UAVXSimulator:
                       'core/config.py','comm/mesh_router.py','comm/channel.py',
                       'comm/channel_legacy.py','run_simulation.py']
         self.source_sha256={name:hashlib.sha256((root/name).read_bytes()).hexdigest() for name in source_paths}
-        if not isinstance(fleet_size, int) or not 1 <= fleet_size <= 36:
-            raise ValueError('fleet_size must be between 1 and 36 for the declared home-pad layout')
+        if not isinstance(fleet_size, int) or not 1 <= fleet_size <= 72:
+            raise ValueError('fleet_size must be between 1 and 72 for the declared home-pad layout')
         if not math.isfinite(dt) or not 0 < dt <= 0.5:
             raise ValueError('dt must be positive and at most 0.5 seconds')
         if not math.isfinite(packet_loss) or not 0 <= packet_loss < 1:
@@ -123,6 +123,32 @@ class UAVXSimulator:
         self.disturbance_record = None
         self.completion_s = None
         self.shutdown = False
+        self.relay_spacing_m = 85.
+        self.planning_separation_m = 20.
+        self.recharge_s = 720.
+
+    def _build_slots(self, task):
+        count = math.ceil(math.hypot(*task.position[:2], 40.) / self.relay_spacing_m)
+        return {i: (task.position[0]*(i+1)/count, task.position[1]*(i+1)/count, 40.)
+                for i in range(count)}
+
+    def _select_task(self, available, current):
+        highest = max(available, key=lambda p: (p.priority, -p.spawn_s, -p.id))
+        return highest if current is None or highest.priority > current.priority else current
+
+    def _radio_exclusions(self):
+        d = self.disturbance_record
+        nodes = {d['uav_id']} if d and (d['type']=='failure' or self.state.time<d['time_s']+30) else set()
+        return nodes, set()
+
+    def _prepare_output(self, output):
+        """Extension hook for scenario/sensor evidence; no effect on baseline runs."""
+
+    def _write_extra_evidence(self, output):
+        return []
+
+    def _charging_allowed(self, uid):
+        return True
 
     def _validate_tasks(self):
         if not self.tasks or len({p.id for p in self.tasks}) != len(self.tasks):
@@ -134,8 +160,8 @@ class UAVXSimulator:
                     or not 0 <= p.spawn_s <= 2700 or p.priority <= 0):
                 raise ValueError('invalid PoI geometry, spawn time or priority')
 
-    def event(self, kind, event_time_s=None, **data):
-        self.events.append(dict(type=kind, time_s=self.state.time if event_time_s is None else event_time_s, **data))
+    def event(self, event_type, event_time_s=None, **data):
+        self.events.append(dict(type=event_type, time_s=self.state.time if event_time_s is None else event_time_s, **data))
 
     def _eligible(self, uid, goal, dwell=30):
         f, u = self.flights[uid], self.state.uavs[uid]
@@ -207,12 +233,11 @@ class UAVXSimulator:
             self.slots.clear();self.slot_owners.clear();self.replacements.clear()
             return
         current = next((p for p in available if p.id == self.active_id), None)
-        highest = max(available, key=lambda p: (p.priority, -p.spawn_s, -p.id))
-        task = highest if current is None or highest.priority > current.priority else current
+        task = self._select_task(available, current)
         if task.id != self.active_id:
             self.active_id = task.id
-            count = math.ceil(math.hypot(*task.position[:2], 40.)/85.)
-            self.slots = {i: (task.position[0]*(i+1)/count, task.position[1]*(i+1)/count, 40.) for i in range(count)}
+            self.slots = self._build_slots(task)
+            count = len(self.slots)
             # Keep slot identity while the chain pivots. Reassigning everyone by
             # nearest distance makes vehicles cross and can break the backbone.
             for slot,uid in list(self.slot_owners.items()):
@@ -276,14 +301,17 @@ class UAVXSimulator:
 
     def _reachable_nodes(self, positions, reference_positions=None):
         live=[i for i,u in self.state.uavs.items() if u.is_operational()]
-        d=self.disturbance_record
-        if d and (d['type']=='failure' or self.state.time<d['time_s']+30):
-            live=[i for i in live if i!=d['uav_id']]
+        excluded, blocked_edges = self._radio_exclusions()
+        live=[i for i in live if i not in excluded]
         points=np.vstack([np.zeros(3),positions[live]])
         adjacent=np.linalg.norm(points[:,None,:]-points[None,:,:],axis=2)<=100+1e-8
         if reference_positions is not None:
             reference=np.vstack([np.zeros(3),reference_positions[live]])
             adjacent &= np.linalg.norm(reference[:,None,:]-reference[None,:,:],axis=2)<=100+1e-8
+        index = {uid: i for i,uid in enumerate([-1,*live])}
+        for a,b in blocked_edges:
+            if a in index and b in index:
+                adjacent[index[a],index[b]] = adjacent[index[b],index[a]] = False
         reached={0};front=[0]
         while front:
             node=front.pop()
@@ -330,8 +358,17 @@ class UAVXSimulator:
             if not u.is_operational() or u.target_position is None or f.charge_started_s is not None:
                 continue
             target = u.target_position.to_array().astype(float)
-            if f.returning and np.linalg.norm(starts[uid,:2]-target[:2]) <= 3:
-                f.landing_approach=True
+            if f.returning:
+                home_offset = np.linalg.norm(starts[uid,:2]-target[:2])
+                if home_offset <= 3:
+                    f.landing_approach=True
+                elif home_offset > 5 and starts[uid,2] < 30:
+                    # Avoidance can displace a descending vehicle from its pad.
+                    # Reacquire the overhead approach instead of remaining
+                    # trapped among adjacent grounded vehicles at low altitude.
+                    # Above that band, retain the detour around airborne relays
+                    # instead of repeatedly restarting the same blocked descent.
+                    f.landing_approach=False
             if f.returning and not f.landing_approach:
                 target[2] = 90
                 if starts[uid,2] < 89:
@@ -377,7 +414,7 @@ class UAVXSimulator:
                 when=np.clip(-np.sum(relative*change,axis=1)/np.maximum(denom,1e-20),0,1)
                 closest=np.linalg.norm(relative+change*when[:,None],axis=1)
                 closest[uid]=np.inf
-                if float(np.min(closest)) >= 20-1e-8:
+                if float(np.min(closest)) >= self.planning_separation_m-1e-8:
                     trial=ends.copy();trial[uid]=proposed
                     reachable=self._reachable_count(trial,starts)
                     emergency_return=(f.returning and f.remaining_s <=
@@ -425,9 +462,9 @@ class UAVXSimulator:
                     u.target_position=None;u.state=UAVState.CHARGING;u.role=UAVRole.CHARGING
             else:
                 f.settled_s=0
-            if f.charge_started_s is not None:
+            if f.charge_started_s is not None and self._charging_allowed(uid):
                 # Team assumption: 12-minute full recharge, no instantaneous reset.
-                f.remaining_s=min(1200.,f.remaining_s+self.dt*1200/720)
+                f.remaining_s=min(1200.,f.remaining_s+self.dt*1200/self.recharge_s)
                 if f.remaining_s>=1200:
                     f.sortie_s=0.;f.charge_started_s=None
                     u.state=UAVState.IDLE;u.role=UAVRole.STANDBY
@@ -559,6 +596,7 @@ class UAVXSimulator:
         if not math.isfinite(max_time) or not 0<max_time<=2700:
             raise ValueError('max_time must be positive and no greater than 2700')
         output=Path(output);output.mkdir(parents=True,exist_ok=False)
+        self._prepare_output(output)
         if observer is not None:
             observer.start(self, output)
         next_sample=0.
@@ -577,13 +615,12 @@ class UAVXSimulator:
                     next_sample+=2
         for name,data in [('metrics',self.report()),('events',self.events),('packets',self.router.packet_events),('connectivity',self.samples)]:
             (output/f'{name}.json').write_text(json.dumps(data,indent=2,allow_nan=False),encoding='utf-8')
-        root=Path(__file__).resolve().parents[1]
-        source_paths=['simulation/uavx.py','core/mission_safety.py','core/models.py',
-                      'core/config.py','comm/mesh_router.py','comm/channel.py',
-                      'comm/channel_legacy.py','run_simulation.py']
-        manifest=dict(schema_version=1,python=platform.python_version(),numpy=np.__version__,
+        extra_paths=self._write_extra_evidence(output)
+        artifact_paths=[output/name for name in ('metrics.json','events.json','packets.json','connectivity.json','trajectory.jsonl')]
+        artifact_paths.extend(output/name for name in extra_paths)
+        manifest=dict(schema_version=getattr(self,'schema_version',1),python=platform.python_version(),numpy=np.__version__,
                       networkx=nx.__version__,source_sha256=self.source_sha256,
-                      output_sha256={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(output.iterdir()) if p.is_file()})
+                      output_sha256={p.relative_to(output).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(artifact_paths)})
         (output/'manifest.json').write_text(json.dumps(manifest,indent=2),encoding='utf-8')
         report=self.report()
         if observer is not None:

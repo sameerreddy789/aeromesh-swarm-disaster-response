@@ -14,14 +14,26 @@ Stage 2 scenario files or standardized log schema were supplied.
 | Maximum radio range 100 m | 3D Euclidean link cutoff in MeshRouter, refreshed each tick |
 | Height maximum 100 m; speed maximum 5 m/s | Proposed segments checked before motion, observed maxima reported |
 | Minimum vehicle distance 20 m | Simultaneous swept-segment closest approach, including ground vehicles; no launch exemption |
-| Detection-to-center report maximum 10 s | Immutable detection timestamp in payload; first actual GCS delivery timestamp; missing/late delivery fails |
+| Detection-to-center report maximum 10 s | Immutable first detection timestamp; scenario-camera reporting requires complete, hash-verified image reassembly at the GCS; missing/late delivery fails |
 | 10 PoIs with random position/time | Fixed-seed sampling of positions and spawn times; future tasks prevent early mission completion |
 | Dynamic relay assignment and reconfiguration | Radial relay chain, stable slot identities, energy-based replacement, measured arrival/connectivity before handoff where reserve allows |
 | Emerging high priority regions | Higher-priority spawned task can preempt current task; prior unfinished task stays pending |
-| Failures and communication outages | Optional 30 s relay radio outage or permanent vehicle failure injected after t=900 s when a relay is active |
+| Failures and communication outages | Validated scenario schedules inject link outages, complete radio outages and permanent vehicle failures; actual resolved targets/times are recorded |
 | Measured performance and evidence | Packet offers/drops/deliveries, elapsed communication downtime, trajectories, landing events, checks with explicit failures |
 
-## Declared team assumptions (not organizer requirements)
+## Current scenario extension
+
+The required mission limits above remain unchanged. The default live launcher
+now selects the scenario-driven profile, whose example declares 60 UAVs, 44 m
+protected relay slots, 22 m planning separation, finite 128 KiB/s shared per-node
+TX/RX service, bounded queues and Panda3D rendered camera imagery. Realized tasks,
+charging resources and faults are saved in each scenario. Details and remaining
+qualification limits are in [resilience notes](UAVX_RESILIENCE.md). These resources
+are team assumptions, not organizer approvals.
+The validated scenario fleet range is 1..72, subject to staging geometry and pad
+constraints. The earlier profile's smaller layout is described separately below.
+
+## Earlier footprint-profile assumptions (retained for reproduction)
 
 - 30 vehicles by default, configurable 1..36 for this launch layout. Team size
   is not UAV count. The maximum map distance needs roughly 14 hops with 85 m
@@ -66,11 +78,14 @@ The new safety helpers include dwell/deadline terms absent from the original
 single-UAV energy helper. Time is simulation time throughout.
 
 The Garuda single-client scene reload is unsuitable for one client per swarm
-vehicle. The old city under D:/Aatonovaz/Garuda is not used. Camera processing,
-physical backend integration, and 45-minute video recording need separate work.
+vehicle. The old city under D:/Aatonovaz/Garuda is not used. Simulated scene-camera
+capture and network delivery are implemented in AeroMesh. Physical backend
+integration and learned perception remain unqualified. The supplied material
+does not establish a 45-minute wall-clock video as a submission requirement.
 
 ## Submission boundary
 
 The supplied PDF specifies email submission, unlike the conflicting Forms URL.
-No submission was sent. Team identity, qualification, final report/video,
-organizer log conversion and official scenario validation remain outstanding.
+No submission was sent. The prepared report and demo remain a technical draft.
+Team identity, qualification, organizer log conversion, official scenario
+validation and final submission review remain outstanding.

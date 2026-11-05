@@ -4,6 +4,13 @@ Prepared 5 November 2026 from the user-supplied challenge PDF, report template
 and sample-scenario slide. This is a work plan, not organizer approval or a
 claim that the remaining capabilities have been implemented.
 
+Implementation update: configurable faults, protected relay geometry, bounded
+radio service, scene-camera image delivery, charging capacity and a development
+matrix are now implemented in the [scenario extension](UAVX_RESILIENCE.md).
+The planning table below is retained as the rationale for this work; current
+measured outcomes belong in the validation record. Organizer decisions and
+physical-model qualification are not implied by those implementations.
+
 ## First establish the competition route
 
 The supplied schedule closed Stage 1 on 27 September. Stage 2 runs from
@@ -49,12 +56,13 @@ separately labeled surviving-fleet measurements to explain mission continuity;
 do not replace or reinterpret the original checks. Ask the organizer how failed
 aircraft and transient communication loss are scored in advanced scenarios.
 
-The current chain places relays roughly 85 m apart. Removing an intermediate
+The earlier footprint profile placed relays roughly 85 m apart. Removing an intermediate
 relay can leave a 170 m gap, beyond the 100 m range. A spare dispatched only after
 the break cannot guarantee continuous service. Redundancy has to exist before
 the failure and satisfy 3D range, separation, endurance and fleet constraints.
-Test protected routes first; do not claim that all routes are protected merely
-because an extra relay is present.
+The scenario extension now uses 44 m nominal slots and measures actual redundant
+paths. Do not claim that all moving routes are protected merely because an
+extra relay is present; use the current validation matrix for measured outcomes.
 
 ## Simulator decision
 

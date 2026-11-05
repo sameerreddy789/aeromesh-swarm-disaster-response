@@ -1,5 +1,6 @@
 """Live desktop observer for UAVXSimulator; presentation never owns flight state."""
 from collections import deque
+from io import BytesIO
 import json
 import math
 from pathlib import Path
@@ -15,6 +16,28 @@ def visible_links(sim):
     return [(a, b) for a, b in sim.router.network_graph.edges()
             if a in positions and b in positions
             and math.dist(positions[a], positions[b]) <= sim.constraints.radio_range_m + 1e-8]
+
+
+def latest_received_camera(sim):
+    """Read only complete GCS receipts; never use onboard captures or scene truth."""
+    received = getattr(sim, '_received_images', {})
+    observations = getattr(sim, '_observations', {})
+    eligible = []
+    for poi_id, pixels in received.items():
+        metadata = observations.get(poi_id, {})
+        acquired, arrived = metadata.get('acquired_at_s'), metadata.get('received_at_s')
+        if (not isinstance(pixels, bytes) or not pixels
+                or any(isinstance(value, bool) or not isinstance(value, (int, float))
+                       or not math.isfinite(value) for value in (acquired, arrived))
+                or not 0 <= acquired <= arrived <= sim.state.time):
+            continue
+        eligible.append((arrived, poi_id, pixels, metadata))
+    if not eligible:
+        return None
+    arrived, poi_id, pixels, metadata = max(eligible, key=lambda item: (item[0], item[1]))
+    return dict(poi_id=poi_id, pixels=pixels, acquired_at_s=metadata['acquired_at_s'],
+                received_at_s=arrived, capture_age_s=sim.state.time-metadata['acquired_at_s'],
+                receipt_age_s=sim.state.time-arrived)
 
 
 class UAVXVisualizer:
@@ -35,6 +58,8 @@ class UAVXVisualizer:
         self.speed, self.real_time = speed, real_time
         self.paused = self.closed = self.restart_requested = False
         self.show_links = self.show_trails = True
+        self.show_camera = True
+        self._camera_cache_key = self._camera_surface = None
         self.selected, self.zoom, self.pan = 0, 1., [0., 0.]
         self.dragging = False
         self.sim = self.output = self.final_report = None
@@ -52,6 +77,7 @@ class UAVXVisualizer:
         self.started_wall = self.next_step = time.monotonic()
         self.last_save = self.last_render = 0.
         self.captures = set()
+        self._camera_cache_key = self._camera_surface = None
         self.render()
         self.save_live(force=True)
 
@@ -92,6 +118,8 @@ class UAVXVisualizer:
                     self.show_links = not self.show_links
                 elif event.key == pygame.K_t:
                     self.show_trails = not self.show_trails
+                elif event.key == pygame.K_v and self.has_camera():
+                    self.show_camera = not self.show_camera
                 elif event.key == pygame.K_HOME:
                     self.zoom, self.pan = 1., [0., 0.]
                 elif event.key == pygame.K_r and self.final_report is not None:
@@ -153,6 +181,10 @@ class UAVXVisualizer:
                       completed_pois=sum(p.surveyed and p.report_s is not None for p in sim.tasks),
                       positions={uid:u.position.to_array().tolist() for uid,u in sim.state.uavs.items()},
                       final_checks=None if self.final_report is None else self.final_report['checks'])
+        if self.has_camera():
+            receipt = latest_received_camera(sim)
+            status['gcs_camera'] = ({key: value for key, value in receipt.items() if key != 'pixels'}
+                                    if receipt else None)
         temporary = self.output / 'live.tmp'
         temporary.write_text(json.dumps(status, indent=2), encoding='utf-8')
         temporary.replace(self.output / 'live.json')
@@ -244,31 +276,91 @@ class UAVXVisualizer:
               ('FLEET',f'{airborne} airborne  |  {sum(f.landed for f in s.flights.values())} landed'),
               ('NETWORK',f'{connected} / {airborne} airborne connected'),
               ('PACKET DELIVERY',f'{stats["pdr"]*100:.2f}%   |   {stats["avg_latency"]:.2f} s mean latency')]
+        row_spacing = 56 if self.has_camera() and height < 820 else 65
         for label,value in rows:
             self.text(label,(x,y),self.MUTED,self.small)
-            self.text(value,(x,y+23));y+=65
+            self.text(value,(x,y+23));y+=row_spacing
+        if self.has_camera() and self.show_camera:
+            y = self.draw_camera(x, y, width, height)
+        else:
+            y = self.draw_details(x, y, height)
+        scenario = getattr(s, 'scenario', None)
+        if scenario is not None:
+            injected = len(getattr(s, 'fault_records', []))
+            faults = len(getattr(scenario, 'faults', ()))
+            self.text(f'Faults: {injected} / {faults} injected',
+                      (x, min(height-156, y+12)), self.AMBER, self.small)
+            y += 30
+        if self.final_report:
+            failed=[k for k,v in self.final_report['checks'].items() if not v]
+            self.text('SAMPLE CHECKS PASS' if not failed else f'{len(failed)} CHECKS FAILED',
+                      (x,min(height-130,y+20)),self.GREEN if not failed else self.RED)
+            self.text('R: new run   Esc: close',(x,min(height-103,y+46)),self.MUTED,self.small)
+        elif scenario is None:
+            self.text(f'Fault scenario: {s.disturbance}',(x,min(height-112,y+20)),self.AMBER,self.small)
+
+    def has_camera(self):
+        return getattr(getattr(self.sim, 'scenario', None), 'camera_mode', None) == 'panda3d'
+
+    def draw_camera(self, x, y, width, height):
+        self.text('SIMULATED CAMERA / GCS RECEIVED', (x, y+4), self.CYAN, self.small)
+        rect = pygame.Rect(x, y+32, max(160, width-x-26), min(180, max(70, height-y-280)))
+        pygame.draw.rect(self.screen, self.PANEL, rect)
+        receipt = latest_received_camera(self.sim)
+        if receipt is None:
+            self._camera_cache_key = self._camera_surface = None
+            self.text('Awaiting image receipt', (x+12, rect.centery-10), self.MUTED, self.small)
+            self.text('Images appear after complete delivery.', (x, rect.bottom+10), self.MUTED, self.small)
+            bottom = rect.bottom+52
+        else:
+            key = (receipt['poi_id'], receipt['received_at_s'], receipt['pixels'])
+            if key != self._camera_cache_key:
+                self._camera_cache_key = key
+                try:
+                    self._camera_surface = pygame.image.load(BytesIO(receipt['pixels']), 'received.png').convert()
+                except (pygame.error, ValueError):
+                    self._camera_surface = None
+            if self._camera_surface is not None:
+                image_width, image_height = self._camera_surface.get_size()
+                ratio = min(rect.width/image_width, rect.height/image_height)
+                thumb = pygame.transform.smoothscale(self._camera_surface,
+                                                      (max(1, round(image_width*ratio)), max(1, round(image_height*ratio))))
+                self.screen.blit(thumb, thumb.get_rect(center=rect.center))
+            else:
+                self.text('Received image cannot be decoded', (x+8, rect.centery-10), self.AMBER, self.small)
+            self.text(f'PoI {receipt["poi_id"]}  |  captured {receipt["capture_age_s"]:.1f} s ago',
+                      (x, rect.bottom+10), self.TEXT, self.small)
+            self.text(f'GCS received {receipt["receipt_age_s"]:.1f} s ago',
+                      (x, rect.bottom+32), self.MUTED, self.small)
+            bottom = rect.bottom+58
+        self.text('V: drone details and events', (x, bottom), self.MUTED, self.small)
+        return bottom+20
+
+    def draw_details(self, x, y, height):
+        s = self.sim
+        compact = self.has_camera() and height < 820
         u=s.state.uavs[self.selected];f=s.flights[self.selected]
         self.text(f'SELECTED  U{self.selected}',(x,y+4),self.CYAN)
         lines=[f'Role: {"returning" if f.returning else u.role.value}',
                f'Height: {u.position.z:.1f} m  |  battery: {100*u.battery_level:.0f}%',
                f'Flight time: {f.sortie_s:.1f} / 1200 s',
                f'GCS path: {"connected" if u.connected_to_gcs else "unavailable"}']
+        if compact:
+            lines = [f'{"Returning" if f.returning else u.role.value.title()}  |  GCS: {"connected" if u.connected_to_gcs else "unavailable"}',
+                     lines[1], lines[2]]
         for i,line in enumerate(lines):
             self.text(line,(x,y+34+i*23),self.TEXT,self.small)
-        y+=142
+        y+=112 if compact else 142
         self.text('RECENT EVENTS',(x,y),self.MUTED,self.small);y+=25
-        for e in s.events[-5:]:
+        for e in s.events[-(2 if compact else 5):]:
             label=e['type'].replace('_',' ')
             if 'poi_id' in e:label+=f' P{e["poi_id"]}'
             if 'uav_id' in e:label+=f' U{e["uav_id"]}'
             self.text(f'{e["time_s"]:6.1f}  {label[:32]}',(x,y),self.MUTED,self.small);y+=23
-        if self.final_report:
-            failed=[k for k,v in self.final_report['checks'].items() if not v]
-            self.text('SAMPLE CHECKS PASS' if not failed else f'{len(failed)} CHECKS FAILED',
-                      (x,min(height-130,y+20)),self.GREEN if not failed else self.RED)
-            self.text('R: new run   Esc: close',(x,min(height-103,y+46)),self.MUTED,self.small)
-        else:
-            self.text(f'Fault scenario: {s.disturbance}',(x,min(height-112,y+20)),self.AMBER,self.small)
+        if self.has_camera():
+            self.text('V: GCS camera image', (x, y+6), self.MUTED, self.small)
+            y += 26
+        return y
 
     def wait_at_end(self, repeat=False, auto_close=False):
         if auto_close or self.closed:

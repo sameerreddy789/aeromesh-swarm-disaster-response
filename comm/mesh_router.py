@@ -5,6 +5,7 @@ packet queuing, forwarding, and latency tracking.
 """
 import math
 import random
+import json
 from copy import deepcopy
 import networkx as nx
 from typing import Dict, List, Optional, Tuple, Set
@@ -19,22 +20,61 @@ class MeshRouter:
 
     def __init__(self, mission_state: MissionState, event_manager=None,
                  max_range_m: Optional[float] = None, rng=None,
-                 hop_delay_s: float = 0.0):
+                 hop_delay_s: float = 0.0,
+                 node_bandwidth_bytes_s: Optional[float] = None,
+                 queue_limit_bytes: Optional[int] = None):
         """Create an abstract router.
 
         ``rng`` controls packet-loss draws and accepts ``random.Random(seed)``.
         RF channel sampling retains its existing NumPy RNG. ``hop_delay_s``
         is the minimum time between forwarding attempts; simulation time is
         owned by the caller, never wall-clock time.
+
+        With ``node_bandwidth_bytes_s``, each node (including GCS) has a single
+        half-duplex serial service calendar shared by TX and RX. Disjoint links
+        may operate in parallel. Packets can consume several calls' capacity;
+        partial service is preemptible at call boundaries. Loss is sampled only
+        after a whole attempt, whose serialized bytes have consumed capacity.
+        Idle capacity is never carried into a later interval. This is an
+        abstract link-service model, not an RF propagation/interference model.
+        ``queue_limit_bytes`` caps each node's resident serialized bytes.
         """
         if max_range_m is not None and (not math.isfinite(max_range_m) or max_range_m <= 0):
             raise ValueError("max_range_m must be positive and finite")
         if not math.isfinite(hop_delay_s) or hop_delay_s < 0:
             raise ValueError("hop_delay_s must be nonnegative and finite")
+        if node_bandwidth_bytes_s is not None and (
+                isinstance(node_bandwidth_bytes_s, bool)
+                or not math.isfinite(node_bandwidth_bytes_s)
+                or node_bandwidth_bytes_s <= 0):
+            raise ValueError("node_bandwidth_bytes_s must be positive and finite")
+        if queue_limit_bytes is not None and (
+                isinstance(queue_limit_bytes, bool)
+                or not isinstance(queue_limit_bytes, int) or queue_limit_bytes <= 0):
+            raise ValueError("queue_limit_bytes must be a positive integer")
         self.max_range_m = max_range_m
         self.hop_delay_s = hop_delay_s
         self.rng = rng if rng is not None else random
         self.mission_state = mission_state
+        self.node_bandwidth_bytes_s = node_bandwidth_bytes_s
+        self.queue_limit_bytes = queue_limit_bytes
+        self._bounded_radio = node_bandwidth_bytes_s is not None or queue_limit_bytes is not None
+        self._wire_sizes: Dict[int, int] = {}
+        self._packet_types: Dict[int, PacketType] = {}
+        self._queued_at: Dict[int, int] = {}
+        self._queued_bytes: Dict[int, int] = defaultdict(int)
+        self._queue_peaks: Dict[int, int] = defaultdict(int)
+        self._partial_bytes: Dict[int, float] = {}
+        self._partial_edges: Dict[int, Tuple[int, int]] = {}
+        self._last_service_time = float(mission_state.time)
+        self._node_service_bytes: Dict[int, float] = defaultdict(float)
+        self._node_tx_bytes: Dict[int, float] = defaultdict(float)
+        self._node_rx_bytes: Dict[int, float] = defaultdict(float)
+        self.radio_service_samples: List[Dict] = []
+        self.radio_attempts = 0
+        self.radio_completed_attempts = 0
+        self.radio_aborted_partial_attempts = 0
+        self.radio_queue_overflows = 0
         self.rf_channel = RFChannel()
         self.cfg_rf = config.rf
         # Optional DynamicEventManager; when set, active RF interference zones
@@ -185,6 +225,9 @@ class MeshRouter:
         """Freeze one logical packet's provenance; duplicate IDs are idempotent."""
         if packet.packet_id in self._offered_packets:
             return False
+        if self._bounded_radio:
+            self._wire_sizes[packet.packet_id] = self.packet_wire_size(packet)
+            self._packet_types[packet.packet_id] = packet.packet_type
         self.packets_sent += 1
         self._offered_packets[packet.packet_id] = {
             "packet_id": packet.packet_id,
@@ -193,6 +236,8 @@ class MeshRouter:
             "payload": deepcopy(packet.payload),
             "creation_time_s": packet.creation_time,
         }
+        if self._bounded_radio:
+            self._offered_packets[packet.packet_id]["wire_size_bytes"] = self._wire_sizes[packet.packet_id]
         self._event("offered", packet)
         return True
 
@@ -206,6 +251,115 @@ class MeshRouter:
             return True
         node = self.mission_state.uavs.get(node_id)
         return node is not None and node.is_operational()
+
+    @staticmethod
+    def packet_wire_size(packet: Packet) -> int:
+        """Size of the canonical UTF-8 JSON envelope plus explicit payload padding.
+
+        Image bytes must be carried in the JSON payload (for example base64),
+        whose encoded length is counted. ``payload_size`` can request zero
+        padding for synthetic traffic; it can never understate serialized data.
+        Mutable path/retry fields are local routing metadata, not this envelope.
+        """
+        if (isinstance(packet.payload_size, bool)
+                or not math.isfinite(packet.payload_size) or packet.payload_size < 0):
+            raise ValueError("payload_size must be nonnegative and finite")
+        options = dict(sort_keys=True, separators=(',', ':'), ensure_ascii=False, allow_nan=False)
+        payload = json.dumps(packet.payload, **options).encode('utf-8')
+        envelope = json.dumps(dict(packet_id=packet.packet_id,
+                                   packet_type=packet.packet_type.value,
+                                   source_id=packet.source_id, dest_id=packet.dest_id,
+                                   creation_time_s=packet.creation_time,
+                                   payload=packet.payload), **options).encode('utf-8')
+        return len(envelope) + max(0, math.ceil(packet.payload_size) - len(payload))
+
+    def _priority_key(self, packet: Packet):
+        """Control first; emergency reports before telemetry and bulk imagery.
+
+        Non-control traffic ages one priority level every two simulation seconds
+        so a sustained telemetry stream cannot indefinitely starve old images.
+        Provenance and packet type are frozen at offer time for this decision.
+        """
+        record = self._offered_packets.get(packet.packet_id, {})
+        payload = record.get('payload') or {}
+        kind = payload.get('kind', '')
+        priority = payload.get('priority', 1)
+        emergency = isinstance(priority, (int, float)) and not isinstance(priority, bool) and priority > 1
+        if self._packet_types.get(packet.packet_id, packet.packet_type) == PacketType.CONTROL:
+            rank = 0
+        elif emergency or kind in ('poi_report', 'emergency', 'emergency_report'):
+            rank = 1
+        elif kind in ('poi_image_chunk', 'image_chunk', 'imagery', 'bulk'):
+            rank = 3
+        else:
+            rank = 2
+        created = record.get('creation_time_s', packet.creation_time)
+        age = max(0., self.mission_state.time - created)
+        if rank:
+            rank = max(1, rank - int(age / 2.))
+        return rank, created, packet.packet_id
+
+    def _forget_resident(self, packet: Packet):
+        node = self._queued_at.pop(packet.packet_id, None)
+        if node is not None:
+            self._queued_bytes[node] -= self._wire_sizes[packet.packet_id]
+
+    def _enqueue(self, node: int, packet: Packet) -> bool:
+        if self._bounded_radio and self._queued_at.get(packet.packet_id) != node:
+            size = self._wire_sizes[packet.packet_id]
+            if self.queue_limit_bytes is not None and self._queued_bytes[node] + size > self.queue_limit_bytes:
+                self.radio_queue_overflows += 1
+                self._record_drop(packet, 'queue_overflow')
+                return False
+            self._forget_resident(packet)
+            self._queued_at[packet.packet_id] = node
+            self._queued_bytes[node] += size
+            self._queue_peaks[node] = max(self._queue_peaks[node], self._queued_bytes[node])
+        self.packet_queues[node].append(packet)
+        return True
+
+    def _cancel_partial(self, packet: Packet):
+        if self._partial_bytes.pop(packet.packet_id, 0) > 0:
+            self.radio_aborted_partial_attempts += 1
+        self._partial_edges.pop(packet.packet_id, None)
+
+    def _service_attempt(self, packet: Packet, node: int, next_node: int,
+                         available_at: Dict[int, float], interval_start: float,
+                         sample: Dict) -> bool:
+        """Consume serialized service on both endpoints; return whole-attempt completion."""
+        if self.node_bandwidth_bytes_s is None:
+            return True
+        packet_id = packet.packet_id
+        edge = (node, next_node)
+        if packet_id in self._partial_edges and self._partial_edges[packet_id] != edge:
+            self._cancel_partial(packet)
+        # The configured minimum hop delay can include serialization. A newly
+        # offered packet cannot spend capacity from before its offer timestamp.
+        earliest = self._ready_at.get(packet_id, self.mission_state.time) - self.hop_delay_s
+        start = max(interval_start, earliest,
+                    available_at.get(node, interval_start), available_at.get(next_node, interval_start))
+        remaining_time = max(0., self.mission_state.time - start)
+        remaining_bytes = self._wire_sizes[packet_id] - self._partial_bytes.get(packet_id, 0.)
+        amount = min(remaining_bytes, remaining_time * self.node_bandwidth_bytes_s)
+        if amount <= 1e-9:
+            return False
+        if packet_id not in self._partial_edges:
+            self._partial_edges[packet_id] = edge
+            self.radio_attempts += 1
+        end = start + amount / self.node_bandwidth_bytes_s
+        available_at[node] = available_at[next_node] = end
+        for endpoint in edge:
+            self._node_service_bytes[endpoint] += amount
+            sample['node_service_bytes'][endpoint] = sample['node_service_bytes'].get(endpoint, 0.) + amount
+        self._node_tx_bytes[node] += amount
+        self._node_rx_bytes[next_node] += amount
+        self._partial_bytes[packet_id] = self._partial_bytes.get(packet_id, 0.) + amount
+        if self._partial_bytes[packet_id] + 1e-8 < self._wire_sizes[packet_id]:
+            return False
+        self._partial_bytes.pop(packet_id, None)
+        self._partial_edges.pop(packet_id, None)
+        self.radio_completed_attempts += 1
+        return True
 
     def send_packet(self, packet: Packet) -> bool:
         """Offer once, then enqueue or record a terminal drop.
@@ -227,13 +381,14 @@ class MeshRouter:
         packet.path = path
         packet.current_hop = 0
         self._ready_at[packet.packet_id] = self.mission_state.time + self.hop_delay_s
-        self.packet_queues[packet.source_id].append(packet)
-        return True
+        return self._enqueue(packet.source_id, packet)
 
     def _record_drop(self, packet: Packet, reason: str) -> None:
         if packet.packet_id in self.terminal_packet_ids:
             return
         self.terminal_packet_ids.add(packet.packet_id)
+        self._forget_resident(packet)
+        self._cancel_partial(packet)
         self._ready_at.pop(packet.packet_id, None)
         self.packets_dropped += 1
         if packet.dest_id == -1:
@@ -241,6 +396,7 @@ class MeshRouter:
         self._event("dropped", packet, reason=reason)
 
     def _reroute(self, packet: Packet, current_node: int, next_node: int) -> bool:
+        self._cancel_partial(packet)
         self.reroute_attempts += 1
         alternative = self._find_alternative_path(
             current_node, packet.dest_id,
@@ -259,8 +415,7 @@ class MeshRouter:
         self.reroutes_found += 1
         # Route computation is not service restoration or packet delivery.
         self._ready_at[packet.packet_id] = self.mission_state.time + self.hop_delay_s
-        self.packet_queues[current_node].append(packet)
-        return True
+        return self._enqueue(current_node, packet)
 
     def process_packet_forwarding(self, dt: float):
         """Service each queued packet once and at most one hop per packet per call.
@@ -269,9 +424,21 @@ class MeshRouter:
         let one packet traverse several pre-existing queues in the same tick.
         Queue wait and retry wait remain in end-to-end simulation latency.
         """
+        interval_start = self._last_service_time
+        available_at = {}
+        sample = None
+        if self.node_bandwidth_bytes_s is not None:
+            now = self.mission_state.time
+            if (not math.isfinite(dt) or dt <= 0 or not math.isfinite(now)
+                    or now < self._last_service_time):
+                raise ValueError('bounded radio requires positive dt and a finite nondecreasing simulation clock')
+            sample = dict(time_s=now, elapsed_s=now - interval_start, node_service_bytes={})
+            self._last_service_time = now
         outgoing = []
         for node_id, queue in list(self.packet_queues.items()):
             outgoing.extend((node_id, queue.popleft()) for _ in range(len(queue)))
+        if self._bounded_radio:
+            outgoing.sort(key=lambda item: self._priority_key(item[1]))
         processed = set()
         for node_id, packet in outgoing:
             packet_id = packet.packet_id
@@ -310,6 +477,9 @@ class MeshRouter:
                 if not self._reroute(packet, node_id, next_node):
                     self._record_drop(packet, "route_lost")
                 continue
+            if not self._service_attempt(packet, node_id, next_node, available_at, interval_start, sample):
+                self.packet_queues[node_id].append(packet)
+                continue
             if self.rng.random() >= link_quality["pdr"]:
                 if packet.retry_count < packet.max_retries:
                     packet.retry_count += 1
@@ -326,7 +496,9 @@ class MeshRouter:
             if next_node == packet.dest_id:
                 self._deliver_packet(packet)
             else:
-                self.packet_queues[next_node].append(packet)
+                self._enqueue(next_node, packet)
+        if sample is not None:
+            self.radio_service_samples.append(sample)
 
     def _deliver_packet(self, packet: Packet):
         """Record terminal delivery once, including offered-to-receipt latency."""
@@ -335,6 +507,8 @@ class MeshRouter:
         # Support existing direct delivery callers without corrupting accounting.
         self._record_offer(packet)
         self.terminal_packet_ids.add(packet.packet_id)
+        self._forget_resident(packet)
+        self._cancel_partial(packet)
         self.delivered_packet_ids.add(packet.packet_id)
         self._ready_at.pop(packet.packet_id, None)
         self.packets_delivered += 1
@@ -419,7 +593,7 @@ class MeshRouter:
         avg_hops = sum(e["hops"] for e in self.packet_events if e["type"] == "delivered") / max(1, self.packets_delivered)
         avg_rec_lat = (sum(self.recovery_latencies) / len(self.recovery_latencies)) if self.recovery_latencies else 0.0
 
-        return {
+        result = {
             'packets_sent': self.packets_sent,
             'packets_delivered': self.packets_delivered,
             'packets_dropped': self.packets_dropped,
@@ -434,3 +608,21 @@ class MeshRouter:
             'num_nodes': self.network_graph.number_of_nodes(),
             'num_edges': self.network_graph.number_of_edges()
         }
+        if self._bounded_radio:
+            result['radio_service'] = {
+                'node_bandwidth_bytes_s': self.node_bandwidth_bytes_s,
+                'queue_limit_bytes': self.queue_limit_bytes,
+                'duplex': 'shared_tx_rx_half_duplex',
+                'scheduling': 'control_then_emergency_then_telemetry_then_bulk; non-control aging every 2 s',
+                'wire_encoding': 'canonical_utf8_json_with_explicit_payload_size_padding',
+                'attempts_started': self.radio_attempts,
+                'attempts_completed': self.radio_completed_attempts,
+                'partial_attempts_aborted': self.radio_aborted_partial_attempts,
+                'queue_overflow_drops': self.radio_queue_overflows,
+                'node_service_bytes': dict(self._node_service_bytes),
+                'node_tx_bytes': dict(self._node_tx_bytes),
+                'node_rx_bytes': dict(self._node_rx_bytes),
+                'queue_bytes': dict(self._queued_bytes),
+                'peak_queue_bytes': dict(self._queue_peaks),
+            }
+        return result

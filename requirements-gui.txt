@@ -1,2 +1,3 @@
 -r requirements-uavx.txt
+-r requirements-sensing.txt
 pygame==2.6.1

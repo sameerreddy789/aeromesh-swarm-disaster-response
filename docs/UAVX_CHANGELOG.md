@@ -4,7 +4,38 @@ Base: `0ba914d79dc8223866c3333956c31251f5c5f661`.
 Working branch: `codex/uavx-submission`. Original DroneOS and downloaded AeroMesh
 checkouts were preserved; implementation lives in a separate AeroMesh-UAVX clone.
 
-## Implemented
+## Scenario/camera resilience update
+
+- Added validated JSON scenarios, exact realized task inputs, explicit link/radio/
+  aircraft fault schedules and a complete development matrix retaining failures.
+- Added protected 44 m relay slots, measured biconnected GCS paths, nearest-task
+  selection within priority, 22 m planning separation and configurable charging.
+- Fixed a late link-failure regression caused by replacement relays spreading
+  apart during a priority change. Ordinary movement now retains existing
+  redundant GCS paths using edges available throughout the proposed interval;
+  the emergency-return override and independently measured checks remain intact.
+  The original failed run is preserved with its source snapshot.
+- Fixed a landing approach that remained latched after avoidance displaced a
+  descending aircraft from its pad; it now climbs and realigns before descent.
+  This addresses the seed-100 battery-exhaustion regression without relaxing
+  separation, connectivity, charge or landing checks.
+- Replaced repeated trial-graph construction with an equivalent Tarjan traversal;
+  independent NetworkX comparisons verify the reachability/protection score.
+- Added finite shared TX/RX service, exact serialized byte accounting, queue
+  limits, priority/aging and capacity consumption for retransmissions.
+- Added Panda3D CPU scene-camera PNG capture, fragmentation, hash-checked GCS
+  reassembly and received-only GUI imagery. A failed sensor carrier can be
+  replaced through a separately timestamped recapture without resetting deadlines.
+- Fixed double-charging one pad during a timestep, lost-camera-carrier deadlock,
+  occupied survey-altitude targets and an event-argument naming collision.
+- Strengthened evidence verification against premature completion, fabricated
+  radio-service ledgers, truncated images, corrupted captures and invalid paths.
+- Reduced unnecessary routing computation to the GCS destination for this profile;
+  actual packet routing, service limits and constraints remain unchanged.
+- The new example declares 60 UAVs/charging pads. Resource assumptions and strict
+  failure semantics remain explicit; this is not organizer qualification.
+
+## Earlier implementation
 
 - Added `Start-AeroMesh.cmd`, isolated GUI dependencies and a live desktop view
   wired directly to the updated UAV-X engine. The observer displays current UAV

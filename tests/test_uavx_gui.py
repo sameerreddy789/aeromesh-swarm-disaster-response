@@ -1,9 +1,12 @@
 """The live UI must observe the real mission without changing its outcomes."""
 import json
+from copy import deepcopy
+from io import BytesIO
 import os
 import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -12,7 +15,7 @@ os.environ.setdefault('SDL_AUDIODRIVER', 'dummy')
 pygame = pytest.importorskip('pygame')
 from core.models import Vector3D
 from simulation.uavx import UAVXSimulator
-from visualization.uavx_gui import UAVXVisualizer, visible_links
+from visualization.uavx_gui import UAVXVisualizer, visible_links, latest_received_camera
 from verify_submission import verify
 
 
@@ -82,3 +85,89 @@ def test_visualization_import_does_not_require_web_or_plot_dependencies():
     command="import sys, visualization; assert 'flask' not in sys.modules; assert 'matplotlib' not in sys.modules"
     result=subprocess.run([sys.executable,'-c',command],cwd=root,capture_output=True,text=True)
     assert result.returncode==0,result.stderr
+
+
+def camera_fixture():
+    sim = UAVXSimulator(fleet_size=5)
+    sim.state.time = 12.
+    sim.scenario = SimpleNamespace(camera_mode='panda3d', faults=(object(),))
+    sim.fault_records = []
+    sim._observations = {0: dict(acquired_at_s=2., received_at_s=None)}
+    sim._received_images = {}
+    return sim
+
+
+def png_bytes(color):
+    surface = pygame.Surface((24, 16))
+    surface.fill(color)
+    stream = BytesIO()
+    pygame.image.save(surface, stream, 'fixture.png')
+    return stream.getvalue()
+
+
+def test_camera_preview_waits_for_complete_gcs_receipt(tmp_path):
+    sim = camera_fixture()
+    # Onboard imagery and scene truth must never become a GCS preview.
+    sim._image_bytes = {0: png_bytes((240, 20, 20))}
+    sim._camera = SimpleNamespace(capture=lambda *a, **k: pytest.fail('viewer invoked sensor'))
+    viewer = UAVXVisualizer(real_time=False)
+    try:
+        viewer.start(sim, tmp_path)
+        assert latest_received_camera(sim) is None
+        assert viewer._camera_surface is None
+        status = json.loads((tmp_path/'viewer/live.json').read_text())
+        assert status['gcs_camera'] is None
+    finally:
+        viewer.close()
+
+
+@pytest.mark.parametrize('width,height', [(1400, 900), (1050, 720)])
+def test_received_camera_pixels_and_ages_are_shown_without_changing_flight_state(tmp_path, width, height):
+    sim = camera_fixture()
+    sim._image_bytes = {0: png_bytes((240, 20, 20))}
+    sim._received_images[0] = png_bytes((20, 30, 240))
+    sim._observations[0]['received_at_s'] = 10.
+    before = (deepcopy(sim.flights), deepcopy(sim._observations),
+              {uid: u.position.to_array().tolist() for uid,u in sim.state.uavs.items()}, sim.state.time)
+    viewer = UAVXVisualizer(real_time=False, width=width, height=height)
+    try:
+        viewer.start(sim, tmp_path)
+        assert viewer._camera_surface.get_at((2,2))[:3] == (20, 30, 240)
+        status = json.loads((tmp_path/'viewer/live.json').read_text())
+        assert status['gcs_camera'] == dict(poi_id=0, acquired_at_s=2., received_at_s=10.,
+                                             capture_age_s=10., receipt_age_s=2.)
+        pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_v))
+        viewer.handle_events()
+        assert not viewer.show_camera
+        viewer.render()
+        after = (sim.flights, sim._observations,
+                 {uid: u.position.to_array().tolist() for uid,u in sim.state.uavs.items()}, sim.state.time)
+        assert before == after
+    finally:
+        viewer.close()
+
+
+def test_camera_preview_rejects_missing_or_future_receipt_metadata():
+    sim = camera_fixture()
+    sim._received_images[0] = b'not_yet_validated'
+    assert latest_received_camera(sim) is None
+    sim._observations[0]['received_at_s'] = 13.
+    assert latest_received_camera(sim) is None
+    sim._observations[0]['received_at_s'] = 1.
+    assert latest_received_camera(sim) is None
+
+
+def test_camera_preview_tracks_latest_receipt_and_handles_decode_error(tmp_path):
+    sim = camera_fixture()
+    sim._observations[0]['received_at_s'] = 10.
+    sim._received_images[0] = png_bytes((0, 100, 200))
+    sim._observations[1] = dict(acquired_at_s=8., received_at_s=11.)
+    sim._received_images[1] = b'invalid_png'
+    viewer = UAVXVisualizer(real_time=False)
+    try:
+        viewer.start(sim, tmp_path)
+        assert latest_received_camera(sim)['poi_id'] == 1
+        assert viewer._camera_surface is None
+        assert not viewer.closed
+    finally:
+        viewer.close()

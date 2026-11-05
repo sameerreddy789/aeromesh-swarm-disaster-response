@@ -16,6 +16,8 @@ ARTIFACTS = {'metrics.json', 'events.json', 'packets.json', 'connectivity.json',
 SOURCES = {'simulation/uavx.py', 'core/mission_safety.py', 'core/models.py',
            'core/config.py', 'comm/mesh_router.py', 'comm/channel.py',
            'comm/channel_legacy.py', 'run_simulation.py'}
+SOURCES_V2 = SOURCES | {'simulation/resilient_uavx.py', 'simulation/uavx_scenario.py', 'simulation/camera_sensor.py'}
+CHECKS_V2_EXTRA = {'scheduled_faults_exercised', 'imagery_received'}
 REQUIREMENTS = dict(area_width_m=1000., area_height_m=1000., mission_duration_s=2700.,
                     max_flight_s=1200., radio_range_m=100., max_altitude_m=100.,
                     max_speed_mps=5., min_separation_m=20., report_deadline_s=10., poi_count=10)
@@ -49,10 +51,37 @@ def close(a, b):
 
 def _verify(folder, errors):
     manifest = json.loads((folder / 'manifest.json').read_text(encoding='utf-8'))
-    if type(manifest['schema_version']) is not int or manifest['schema_version'] != 1:
+    version = manifest['schema_version']
+    if type(version) is not int or version not in (1, 2):
         raise ValueError('Unsupported manifest schema')
+    artifact_names, source_names = ARTIFACTS, SOURCES
+    scenario = sensing = None
+    if version == 2:
+        from simulation.uavx_scenario import load_scenario
+        scenario = load_scenario(folder/'scenario.json')
+        sensing = json.loads((folder/'sensing/observations.json').read_text(encoding='utf-8'))
+        artifact_names = ARTIFACTS | {'scenario.json','radio-service.json','sensing/observations.json'}
+        source_names = SOURCES_V2
+        if not isinstance(sensing['observations'], list):
+            raise ValueError('Invalid camera observation inventory')
+        seen_images = set()
+        for observation in sensing['observations']:
+            pid = integer(observation['poi_id'], 'camera PoI identity')
+            attempt = integer(observation['attempt'],'capture attempt')
+            if (pid,attempt) in seen_images:
+                raise ValueError('Duplicate camera capture attempt')
+            seen_images.add((pid,attempt))
+            suffix = '' if attempt==0 else f'-attempt-{attempt}'
+            for key, expected in [('capture_file',f'sensing/captures/poi-{pid}{suffix}.png'),
+                                  ('received_file',f'sensing/received/poi-{pid}{suffix}.png')]:
+                name = observation[key]
+                if key == 'received_file' and name is None:
+                    continue
+                if name != expected:
+                    raise ValueError('Invalid camera artifact path')
+                artifact_names.add(name)
     root = Path(__file__).resolve().parent
-    for key, names, base in [('output_sha256', ARTIFACTS, folder), ('source_sha256', SOURCES, root)]:
+    for key, names, base in [('output_sha256', artifact_names, folder), ('source_sha256', source_names, root)]:
         hashes = manifest[key]
         if not isinstance(hashes, dict) or set(hashes) != names:
             raise ValueError(f'Incomplete or invalid {key} inventory')
@@ -69,20 +98,21 @@ def _verify(folder, errors):
             for name in ARTIFACTS - {'trajectory.jsonl'}}
     m, events, packets, samples = (data[n] for n in ('metrics.json', 'events.json', 'packets.json', 'connectivity.json'))
     frames = [json.loads(line) for line in (folder / 'trajectory.jsonl').read_text(encoding='utf-8').splitlines()]
-    if type(m['schema_version']) is not int or m['schema_version'] != 1:
+    if type(m['schema_version']) is not int or m['schema_version'] != version:
         raise ValueError('Unsupported metrics schema')
     if m['requirements'] != REQUIREMENTS:
         raise ValueError('Requirements do not match the supplied sample constraints')
     if not isinstance(m['evidence_scope'], str) or not m['evidence_scope']:
         raise ValueError('Missing evidence scope')
     checks = m['checks']
-    if not isinstance(checks, dict) or set(checks) != CHECKS or any(type(v) is not bool for v in checks.values()):
+    check_names = CHECKS | CHECKS_V2_EXTRA if version == 2 else CHECKS
+    if not isinstance(checks, dict) or set(checks) != check_names or any(type(v) is not bool for v in checks.values()):
         raise ValueError('Missing/invalid constraint checks')
     if type(m['sample_constraints_passed']) is not bool:
         raise ValueError('Invalid summary check')
     if not all(isinstance(v, list) for v in (events, packets, samples, m['tasks'])):
         raise ValueError('Evidence collections must be arrays')
-    fleet = integer(m['fleet_size'], 'fleet_size', 1, 36)
+    fleet = integer(m['fleet_size'], 'fleet_size', 1, 72)
     integer(m['seed'], 'seed', -math.inf)
     elapsed = number(m['elapsed_time_s'], 'elapsed_time_s', maximum=2700.)
     dt = number(m['dt_s'], 'dt_s', minimum=1e-12, maximum=.5)
@@ -105,6 +135,12 @@ def _verify(folder, errors):
         if not same:
             errors.append(f'Contradictory {label}')
 
+    if version == 2:
+        agree('scenario configuration', m['scenario'], scenario.to_dict())
+        agree('scenario fleet', fleet, scenario.fleet_size)
+        agree('scenario seed', m['seed'], scenario.seed)
+        agree('scenario packet loss', m['packet_loss_per_attempt'], scenario.packet_loss)
+
     event_counts = Counter()
     takeoffs, landings, failed = {}, {}, set()
     takeoff_times = {i: [] for i in range(fleet)}
@@ -124,8 +160,11 @@ def _verify(folder, errors):
         elif e['type'] == 'landing_confirmed':
             pos, vel = vector(e['position'], 'landing position'), vector(e['velocity'], 'landing velocity')
             columns = 5 if fleet <= 20 else 6
-            home = ((uid % columns - (columns - 1) / 2) * 25.,
-                    (uid // columns - (math.ceil(fleet / columns) - 1) / 2) * 25., 0.)
+            spacing = 25.
+            if version == 2:
+                columns, spacing = scenario.staging_columns, scenario.pad_spacing_m
+            home = ((uid % columns - (columns - 1) / 2) * spacing,
+                    (uid // columns - (math.ceil(fleet / columns) - 1) / 2) * spacing, 0.)
             observed = number(e['observed_at_s'], 'landing observation', maximum=elapsed + 1e-7)
             number(e['sortie_s'], 'landing sortie', maximum=m['maximum_sortie_s'] + 1e-7)
             if (not close(stamp, observed) or e['disarm_acknowledged'] is not True
@@ -134,6 +173,8 @@ def _verify(folder, errors):
             landings[uid] = max(stamp, landings.get(uid, -1))
         elif e['type'] == 'battery_exhausted' or (e['type'] == 'disturbance_injected' and e['disturbance'] == 'failure'):
             failed.add(uid)
+        elif e['type'] == 'scenario_fault_injected' and e['kind'] == 'vehicle_failure':
+            failed.add(integer(e['target'], 'failed UAV', maximum=fleet-1))
         elif e['type'] == 'poi_detected':
             detections.setdefault(e['poi_id'], []).append(e)
         elif e['type'] == 'poi_surveyed':
@@ -176,6 +217,12 @@ def _verify(folder, errors):
             if 'poi_id' in (e['payload'] or {}):
                 receipts.setdefault(e['payload']['poi_id'], []).append(e)
     delivered = [e for e in terminals.values() if e['type'] == 'delivered']
+    image_count = 0
+    if version == 2:
+        from verification.uavx_extended import verify_images, verify_radio, verify_faults
+        receipts, image_count = verify_images(folder, m, sensing, delivered, receipts, agree, events)
+        verify_radio(folder, m, packets, agree)
+        verify_faults(m, events, delivered, agree)
     rerouted = [e for e in delivered if e['reroute_count'] > 0]
     stats = m['packet_statistics']
     for key, expected in [('packets_sent', len(offers)), ('packets_delivered', len(delivered)),
@@ -199,6 +246,11 @@ def _verify(folder, errors):
         raise ValueError('Duplicate or unknown PoI identity')
     for p in tasks:
         pid = p['id']
+        if version == 2:
+            planned = next((task for task in scenario.tasks if task.id == pid), None)
+            if planned is None:
+                raise ValueError('PoI missing from scenario')
+            agree('scenario task', {key:p[key] for key in ('id','position','spawn_s','priority')}, planned.to_dict())
         x, y, z = vector(p['position'], 'PoI position')
         if not (75 <= x <= 1075 and -500 <= y <= 500 and z == 0):
             raise ValueError('Invalid PoI scenario geometry')
@@ -301,11 +353,36 @@ def _verify(folder, errors):
                    geofence=m['geofence_violation_steps'] == 0, no_battery_exhaustion=m['battery_exhaustions'] == 0,
                    continuous_connectivity=downtime < 1e-8,
                    reporting_deadline=not late and all(p['detection_s'] is not None for p in tasks))
+    if version == 2:
+        derived['imagery_received'] = image_count == len(tasks)
+        derived['scheduled_faults_exercised'] = len(m['faults']) == len(scenario.faults)
+        survivors = set(range(fleet)) - failed
+        survivor_metrics = m['survivor_metrics']
+        agree('survivor fleet count', survivor_metrics['operational_uavs'], len(survivors))
+        agree('failed fleet count', survivor_metrics['failed_uavs'], len(failed))
+        survivor_landed = bool(survivors) and all(uid not in takeoffs or landings.get(uid,-1) >= takeoffs[uid] for uid in survivors)
+        agree('survivor landing', survivor_metrics['all_survivors_landed'], survivor_landed)
+        survivor_time = survivor_metrics['completion_time_s']
+        if survivor_time is not None:
+            number(survivor_time, 'survivor completion', maximum=elapsed)
+            if not survivor_landed or len(completed) != len(tasks):
+                errors.append('Survivor completion lacks mission and landing evidence')
+            required_times=[p['report_s'] for p in completed]
+            required_times += [e['time_s'] for values in surveys.values() for e in values]
+            required_times += [stamp for uid,stamp in landings.items() if uid in survivors]
+            if required_times and survivor_time+1e-7 < max(required_times):
+                errors.append('Survivor completion precedes supporting evidence')
     if completion is not None and not (all_landed and len(completed) == len(tasks)):
         errors.append('Completion time lacks completed mission and landing evidence')
+    if completion is not None:
+        required_times=[p['report_s'] for p in completed]
+        required_times += [e['time_s'] for values in surveys.values() for e in values]
+        required_times += list(landings.values())
+        if required_times and completion+1e-7 < max(required_times):
+            errors.append('Completion time precedes supporting evidence')
     if m['minimum_separation_m'] is not None and m['minimum_separation_m'] < 20 - 1e-7 and derived['separation']:
         errors.append('Minimum separation contradicts zero violations')
-    for name in CHECKS:
+    for name in check_names:
         agree(f'{name} check', checks[name], derived[name])
     agree('summary check', m['sample_constraints_passed'], all(checks.values()))
     return [name for name, value in checks.items() if value is not True]

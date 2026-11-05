@@ -21,24 +21,40 @@ On Windows with Python 3.10 installed, double-click **`Start-AeroMesh.cmd`** in
 this repository. It prepares `.venv` if needed and opens **AeroMesh UAV-X | Live
 Swarm Simulation**. Each launch writes to a new `evidence/live-...` directory.
 
-The window runs the updated 30-UAV engine live: survey drones, relay chains,
+The default window runs the scenario-driven 60-UAV development fleet: survey drones, protected relay chains,
 emerging PoIs, packet delivery, battery state and return/landing. It is a **2D
-view of the kinematic model**, with no integrated 3D physics backend.
+view of the kinematic model**, plus GCS-received images rendered by a Panda3D scene camera. Flight dynamics remain kinematic. Fleet size, charging resources and radio assumptions are explicit in the scenario JSON.
 
 For an explicit launch at 4x wall-clock playback:
 
 ```powershell
-.venv\Scripts\python.exe -m pip install -r requirements-gui.txt
-.venv\Scripts\python.exe run_simulation.py --profile uavx --gui --playback-speed 4 --seed 42 --output evidence/my-live-run
+.venv\Scripts\python.exe -m pip install -r requirements-repro.txt
+.venv\Scripts\python.exe run_simulation.py --profile uavx --scenario-file scenarios/uavx/nominal.json --gui --playback-speed 4 --output evidence/my-live-run
 ```
 
 Use **Space** to pause, **+ / -** for speed, **L** for radio links, **T** for trails,
 the mouse wheel to zoom, right-drag to pan, **Home** to fit, and click a drone to
-inspect it. **R** starts a fresh run after completion; **Esc** closes. Playback
+inspect it. **V** switches between the received camera image and drone details. **R** starts a fresh run after completion; **Esc** closes. Playback
 speed changes wall-clock pacing only. The window stays open at mission end.
-See [live GUI validation and evidence](docs/UAVX_GUI.md).
+See [the resilience extension](docs/UAVX_RESILIENCE.md) for current capabilities and [live GUI controls](docs/UAVX_GUI.md).
 
-## Reproduce headless on Windows / Python 3.10
+## Reproduce scenario runs on Windows / Python 3.10
+
+```powershell
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements-repro.txt
+.venv\Scripts\python.exe run_simulation.py --scenario-file scenarios/uavx/nominal.json --output evidence/nominal-new
+.venv\Scripts\python.exe run_simulation.py --scenario-file scenarios/uavx/link-outage.json --output evidence/link-new
+.venv\Scripts\python.exe verify_submission.py evidence/nominal-new
+.venv\Scripts\python.exe scripts/benchmark_uavx.py --output evidence/matrix-new --workers 2
+```
+
+The full development matrix includes nominal seeds, link/radio/vehicle faults,
+limited resources and higher packet loss. Every failure stays in its summary.
+A permanently failed aircraft still fails strict all-UAV return; separately
+reported survivor completion never changes that requirement.
+
+## Reproduce the earlier footprint profile
 
 ```powershell
 python -m venv .venv
@@ -73,11 +89,11 @@ flowchart LR
     B --> C[Energy admission and return reserve]
     C --> D[Swept separation and geofence veto]
     D --> E[Kinematic UAV states]
-    E --> F[Synthetic observation with acquisition timestamp]
+    E --> F[Rendered camera PNG and acquisition timestamp]
     E --> G[100 m range graph]
     F --> H[Queued multi-hop packets]
     G --> H
-    H --> I[GCS receive evidence]
+    H --> I[GCS complete image reassembly and receipt]
     E --> J[Settled home landing and disarm evidence]
     I --> K[Measured metrics and explicit failures]
     J --> K
