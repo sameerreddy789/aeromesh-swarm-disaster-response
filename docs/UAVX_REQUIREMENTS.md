@@ -9,7 +9,7 @@ Stage 2 scenario files or standardized log schema were supplied.
 | Supplied requirement | Implementation / evidence |
 |---|---|
 | 1000 m x 1000 m operational area | PoIs constrained to x=75..1075, y=-500..500 |
-| 45-minute mission; return all UAVs to start | 2700 s hard stop; completion requires all surveys received and every operational vehicle settled/disarmed at its own home pad; failures cannot count as landed |
+| 45-minute mission; return all UAVs to start | 2700 s hard stop; completion requires all surveys received and every UAV settled/disarmed at its own home pad; a permanently failed UAV cannot count as landed |
 | Maximum flight time 20 minutes | Per-sortie 1200 s hard budget, measured accumulated armed time, explicit exhaustion failure |
 | Maximum radio range 100 m | 3D Euclidean link cutoff in MeshRouter, refreshed each tick |
 | Height maximum 100 m; speed maximum 5 m/s | Proposed segments checked before motion, observed maxima reported |
@@ -24,14 +24,24 @@ Stage 2 scenario files or standardized log schema were supplied.
 ## Current scenario extension
 
 The required mission limits above remain unchanged. The default live launcher
-now selects the scenario-driven profile, whose example declares 60 UAVs, 44 m
+now selects the scenario-driven profile, whose example declares 30 UAVs, 44 m
 protected relay slots, 22 m planning separation, finite 128 KiB/s shared per-node
 TX/RX service, bounded queues and Panda3D rendered camera imagery. Realized tasks,
 charging resources and faults are saved in each scenario. Details and remaining
 qualification limits are in [resilience notes](UAVX_RESILIENCE.md). These resources
 are team assumptions, not organizer approvals.
-The validated scenario fleet range is 1..72, subject to staging geometry and pad
-constraints. The earlier profile's smaller layout is described separately below.
+The configuration parser accepts 1..72 aircraft for development, subject to
+staging geometry and pad constraints. This input range is not qualification
+of every fleet size: the chosen challenge fleet and full matrix are fixed at
+30 including spares. The earlier profile is described separately below.
+
+The current core retains centralized state access, a constant endurance budget,
+720 s empty-to-full recharge, 30 s survey dwell and synthetic proximity-triggered
+PoI detection. It uses generated scenery and a rendered RGB camera rather than
+learned survivor recognition. Thirty nominal charging pads and 15 stress-case
+pads model shared service capacity; they do not establish physical charger
+layout, docking, power supply or pad-occupancy mechanics. City/Unreal work is
+paused for storage and is outside this core qualification.
 
 ## Earlier footprint-profile assumptions (retained for reproduction)
 

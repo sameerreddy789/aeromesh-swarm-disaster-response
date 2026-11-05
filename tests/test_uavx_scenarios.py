@@ -162,7 +162,7 @@ def test_shipped_scenarios_declare_resources_and_roundtrip():
     for path in paths:
         scenario = load_scenario(path)
         assert scenario == ScenarioConfig.from_dict(scenario.to_dict())
-        assert scenario.fleet_size == 60 and scenario.charging_pads == 60
+        assert scenario.fleet_size == 30 and scenario.charging_pads == 30
         assert scenario.relay_protection and scenario.camera_mode == 'panda3d'
         assert scenario.radio_bytes_per_s == 131072
 

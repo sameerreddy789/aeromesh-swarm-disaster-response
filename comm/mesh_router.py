@@ -289,7 +289,7 @@ class MeshRouter:
             rank = 0
         elif emergency or kind in ('poi_report', 'emergency', 'emergency_report'):
             rank = 1
-        elif kind in ('poi_image_chunk', 'image_chunk', 'imagery', 'bulk'):
+        elif kind in ('poi_image_chunk', 'unreal_camera_chunk', 'image_chunk', 'imagery', 'bulk'):
             rank = 3
         else:
             rank = 2

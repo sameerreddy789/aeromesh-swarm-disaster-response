@@ -16,7 +16,8 @@ default. The earlier footprint-only profile remains available without this flag.
   intermediate relay can leave an 88 m gap, within the 100 m range. The actual
   graph is sampled for two internally node-disjoint paths to the GCS. Merely
   enabling protection is not treated as proof that every moving UAV is protected.
-- Motion admission also preserves existing redundant GCS paths during ordinary
+- Motion admission also protects redundant GCS paths for aircraft assigned to
+  mission work during ordinary
   deployment, replacement and task changes. Primary reachability uses only
   edges present throughout the movement interval; backup links may hand over
   to new neighbors and are evaluated at the proposed endpoint. Reachability
@@ -24,9 +25,42 @@ default. The earlier footprint-only profile remains available without this flag.
   override this guard. Actual downtime and path protection are still measured
   independently. Two-path protection at every intermediate instant and arbitrary
   failure survivability are not guaranteed.
+  Returning aircraft retain the primary-path requirement but may release their
+  backup path, so redundant-path admission does not consume their return reserve.
 - Priority remains dominant. When the current task finishes, equally urgent
   announced tasks are selected by proximity to the previous task, reducing
   unnecessary full-map travel. Future task positions are excluded from selection.
+  If the preferred new task lacks a complete feasible assignment, the planner
+  tries other announced tasks at the same priority. It does not use a lower
+  priority or future task to bypass that decision, or preempt unfinished work
+  with an equal-priority alternative.
+- Before committing a formation, the planner finds a complete one-to-one role
+  assignment under common deployment, work, withdrawal and energy budgets.
+  It tries feasible budget bounds instead of rejecting a task because one
+  cheapest matching was too slow. Selected cohorts favor up to 180 seconds of
+  additional shared energy headroom, then added flight cost; squared travel
+  costs reduce crossed role assignments. These are planning estimates, and
+  measured movement still decides whether deployment succeeds.
+- During a short gap in announced work, an already dispatched replacement can
+  complete its handoff only after observed arrival and GCS connectivity. While
+  a larger task waits for chargers, a complete connected cohort can continue
+  its existing assignment above the shared reserve. Idle announcement gaps
+  allow a minimum 30 s grace above the hard return reserve. After that grace,
+  waiting also preserves another 40 s survey/report budget and 180 s readiness
+  headroom. The hard reserve applies immediately, even during grace.
+- A completed cohort waits for charging resources only when a copied forecast
+  predicts useful task admission. It uses measured charging levels and the
+  finite-pad queue; it never assumes returning-aircraft arrival. A separate
+  copied clock and copied flight records leave real time, energy, ownership,
+  positions and RNG unchanged. The forecast cannot launch aircraft or grant
+  arrival/charge credit. Actual task admission still requires actual readiness.
+  Already-announced follow-up work determines the capable subset needing extra
+  headroom. This is a planning heuristic, not proof that the follow-up will
+  complete. New announced work, operational-fleet changes, readiness expiry
+  or formation changes invalidate cached waiting decisions.
+  The hold reserve also covers operational non-returning airborne replacements
+  and unassigned UAVs. An incomplete, disconnected or depleted formation
+  withdraws. Planning and handoffs never reset sortie clocks.
 - Every node, including the GCS, has a shared half-duplex TX/RX service limit.
   The example uses 131072 bytes/s and a 1048576-byte queue. Actual serialized
   frame sizes, including base64 image bytes, consume capacity; retries consume
@@ -45,19 +79,30 @@ default. The earlier footprint-only profile remains available without this flag.
 - Planning uses 22 m separation where the declared pad spacing permits it,
   while the original 20 m measured check remains unchanged. Failed aircraft stay
   as obstacles. Charging-pad admission is frozen per interval so a released pad
-  cannot supply two complete charging increments in one timestep.
+  cannot supply two complete charging increments in one timestep. Actual service
+  and its forecast share eligibility: a UAV must be operational, landed,
+  disarmed and have a finite, nonnegative energy value and a started charging
+  interval. Failed aircraft cannot receive charge or be revived at completion.
+  Forecast timing repeats the actual floating-point increments within the
+  remaining mission horizon. Pads model shared service, not detailed physical
+  docking or occupancy.
 - A landing approach displaced more than 5 m from its home pad below 30 m is re-acquired
   from overhead before descent resumes. This avoids trapping a descending UAV
   among neighboring grounded vehicles after a collision-avoidance maneuver.
   Detours above that band continue around airborne relays instead of restarting
   a blocked descent. Measured landing, speed, separation and battery checks apply.
+- Mission aircraft obstructing a returning UAV's home-pad column temporarily
+  move sideways to clear it, then resume their original target/slot. Yielding
+  uses the normal speed cap and the same swept separation, geofence, radio and
+  energy checks. It is measured movement, not a position reset or landing waiver.
 
 ## Resources and model scope
 
-The example scenarios explicitly use **60 UAVs and 60 charging pads**, versus
-30 UAVs in the earlier unprotected benchmark. Fleet size is a resource cost, not
-an organizer-approved allowance. A 30-UAV resource case is included in the matrix
-to expose its effect. Full recharge remains the declared 720 s assumption.
+The example scenarios explicitly use **30 UAVs and 30 charging pads**. The
+resource-stress case retains 30 UAVs and reduces charging capacity to 15 pads.
+Earlier 60/72-aircraft results are historical and cannot qualify this fleet.
+Fleet size remains a resource cost, not an organizer-approved allowance.
+Full recharge remains the declared 720 s assumption.
 Operational grounded/charging UAV radios remain available as network nodes;
 the shared service budget applies to them too. This availability and their
 external charging power are declared simulation assumptions.

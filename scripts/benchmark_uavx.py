@@ -86,6 +86,8 @@ def parse_seeds(values):
 
 def build_matrix(base, seeds=DEFAULT_SEEDS, quick=False):
     """Return named configs; no case is removed merely because it is expected to fail."""
+    if base.fleet_size != 30:
+        raise ValueError('The qualification matrix requires exactly 30 UAVs, including spares')
     def nominal(seed):
         return replace(base, seed=seed, faults=())
 
@@ -100,13 +102,14 @@ def build_matrix(base, seeds=DEFAULT_SEEDS, quick=False):
             ('link-outage-seed42', fault_case('link_outage')),
             ('permanent-failure-seed42', fault_case('vehicle_failure')),
         ]
-    limited_pads = 30 if base.charging_pads is None else min(base.charging_pads, 30)
+    # Resource pressure changes charging capacity, never the frozen total fleet.
+    limited_pads = max(1, (base.charging_pads or base.fleet_size) // 2)
     return [
         *[(f'nominal-seed{seed}', nominal(seed)) for seed in seeds],
         ('link-outage-seed42', fault_case('link_outage')),
         ('radio-outage-seed42', fault_case('radio_outage')),
         ('permanent-failure-seed42', fault_case('vehicle_failure')),
-        ('resource30-seed42', replace(nominal(42), fleet_size=30, charging_pads=limited_pads)),
+        (f'charging-pads{limited_pads}-seed42', replace(nominal(42), charging_pads=limited_pads)),
         ('early-link-seed42', fault_case('link_outage', 180.)),
         ('late-link-seed42', fault_case('link_outage', 1600.)),
         ('packet-loss10pct-seed42', replace(nominal(42), packet_loss=.10)),

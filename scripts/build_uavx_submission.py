@@ -26,8 +26,8 @@ def frame_image(frame, tasks, index=0, camera_receipts=None, faults=None, playba
     font=ImageFont.truetype(str(font_path),18) if font_path.exists() else ImageFont.load_default()
     big=ImageFont.truetype(str(font_path),28) if font_path.exists() else font
     def pos(p): return (90+(p[0]+75)*.58,640-(p[1]+500)*.52)
-    d.text((35,22),'AeroMesh | UAV-X trajectory replay',fill='#142e46',font=big)
-    d.text((35,60),f"Simulation {frame['time_s']:.1f} s  |  {playback}x replay  |  abstract kinematics",fill='#456070',font=font)
+    d.text((35,22),'AeroMesh | UAV-X measured kinematic replay',fill='#142e46',font=big)
+    d.text((35,60),f"Simulation {frame['time_s']:.1f} s  |  {playback}x replay  |  recorded simulation states",fill='#456070',font=font)
     active_faults=[fault for fault in (faults or []) if frame['time_s']>fault['time_s']
                    and (fault['cleared_s'] is None or frame['time_s']<=fault['cleared_s'])]
     if active_faults:
@@ -101,7 +101,12 @@ def make_video(run,out):
         if code: raise RuntimeError(error)
     except Exception:
         proc.kill();proc.wait();raise
-    frame_image(frames[len(frames)//2],metrics['tasks'],camera_receipts=camera_receipts,faults=faults).save(out/'trajectory.png')
+    # The midpoint can be a recharge pause. Use an actual active frame for
+    # the report figure; the video still retains every recorded interval.
+    representative = max(frames, key=lambda frame: (
+        sum(u['armed'] for u in frame['uavs']),
+        max(math.hypot(*u['position'][:2]) for u in frame['uavs'])))
+    frame_image(representative,metrics['tasks'],camera_receipts=camera_receipts,faults=faults).save(out/'trajectory.png')
 
 
 def architecture():
@@ -158,6 +163,9 @@ def _case_label(metrics):
         kind='+'.join(f"{labels.get(f['kind'],f['kind'])}@{f['time_s']:g}s" for f in scenario.get('faults',[])) or 'nominal'
         loss=scenario.get('packet_loss',.02)
         suffix=f"; loss {100*loss:g}%" if loss!=.02 else ''
+        pads=scenario.get('charging_pads')
+        if pads is not None and pads!=metrics['fleet_size']:
+            suffix+=f"; {pads} pads"
         return f"{kind}; s{metrics['seed']}; {metrics['fleet_size']} UAVs{suffix}"
     else:
         disturbance=metrics.get('disturbance') or {}
@@ -194,7 +202,7 @@ def make_pdf(runs,out,video_url=None):
                               ('LINEBELOW',(0,0),(-1,0),.6,colors.HexColor('#28758a'))]))
         story.append(t)
     title('AeroMesh | UAV-X')
-    p('<b>Technical proposal draft - 5 November 2026</b>')
+    p('<b>Technical proposal draft - 6 November 2026</b>')
     p('PUSHPAK Grand Challenge 2026 / Resilient BVLOS Swarm Challenge')
     table([['Submission identity','Status'],['Team name / registration ID','Not supplied'],['Institution / category','Not supplied'],
            ['Leader / members / contributions','Not supplied'],['Stage 2 qualification','Not confirmed'],['Document status','Technical draft; not submitted']], [180,295])
@@ -225,15 +233,17 @@ def make_pdf(runs,out,video_url=None):
     p('<b>Figure 2.</b> Task emergence -&gt; priority/role/energy decision -&gt; movement vetoes -&gt; state update -&gt; timestamped sensing -&gt; packet queues -&gt; GCS receipt -&gt; checks. All runtime intervals use one simulation clock.')
     p('Python, NumPy and NetworkX form the algorithm runtime. Panda3D 1.10.16 TinyDisplay and Pillow supply the optional CPU camera; pygame supplies the live view. The camera receives a kinematic pose and never supplies flight authority. No physical-hardware adapter is invoked by this path.' if camera else 'Python, NumPy and NetworkX form the minimal runtime; pygame supplies the optional live view. No physical-hardware adapter is invoked by this path. A legacy profile preserves earlier scenarios separately.')
     new();title('4. Swarm autonomy, roles and energy')
-    p(f"The centralized planner selects the highest-priority available unfinished task and places relay slots on a radial chain. The first run's nominal slot spacing is {profile['spacing']:g} m. Stable slot identities reduce crossing during re-tasking; unfinished work remains pending after preemption. Scenario runs choose the nearest announced task among equally urgent tasks after finishing the current task, reducing unnecessary full-map travel.")
+    p(f"The centralized planner selects the highest-priority announced unfinished task and places relay slots on a radial chain. The first run's nominal slot spacing is {profile['spacing']:g} m. Scenario admission requires complete matching: every required role receives a distinct eligible aircraft. Squared travel costs reduce crossed assignments; canonical slot order keeps replacement dispatch reproducible. If the preferred new task is infeasible, announced alternatives of equal priority are tried. An unfinished active task retains equal-priority authority; future task coordinates are excluded.")
     if profile['protected']:
         p('Denser placement creates skip links: with 44 m nominal slots, a single missing settled relay can leave an 88 m gap inside the 100 m range. This topology is a protection mechanism, not a guarantee for moving/depleted aircraft. The run samples actual biconnected components containing the GCS to measure which active sources have two internally node-disjoint paths. Deployment, re-tasking and return can still be unprotected.')
-        p('Ordinary motion admission retains a primary GCS path throughout the movement interval and evaluates backup paths at the proposed endpoint, allowing backup links to hand over to new neighbors. This addresses a replacement-column failure during priority changes without requiring an unchanged backup graph. Emergency return can override the guard; continuous two-path protection is not guaranteed. Actual outage and delivery results are measured separately, and earlier failed attempts remain archived.')
+        p('Ordinary motion admission retains a primary GCS path throughout the movement interval and evaluates backup paths for mission-assigned aircraft at the proposed endpoint. Backup links may hand over to new neighbors. Returning aircraft retain a primary path but may release backup links to preserve their return reserve. Emergency return can override the guard; continuous two-path protection is not guaranteed. Actual outage and delivery results are measured separately, and earlier failed attempts remain archived.')
     else:
         p('The baseline 85 m chain does not provide a continuous alternate path across every relay loss: removing an intermediate relay can leave a gap beyond the 100 m range. Dispatching a spare after the break cannot itself prove uninterrupted service.')
-    p(f"Task admission includes travel, dwell, relay wait, return, landing and reserve against the 1200 s sortie cap and 2700 s mission deadline. Recharge is {profile['recharge']:g} s in the first run. This is a declared endurance model, not a calibrated battery or airframe model. Configured shared charging capacity can delay replenishment in scenario runs.")
-    p('A relay handoff requires measured replacement arrival and a GCS path. Replacements are reconciled when owners return or slots disappear. Loss of a GCS path triggers recovery even when local neighbors remain connected. Return reserve takes priority over waiting indefinitely for a handoff.')
-    p('Nominal relay altitude is 40 m, replacement approach 65 m and return routing 90 m where feasible. Every accepted segment is checked for speed, separation, geofence and connectivity. The greedy planner can still stall or incur downtime; central full-state access and resource assumptions remain qualification limits.')
+    p(f"Task admission budgets deployment, dwell, report delivery and common withdrawal against the 1200 s sortie cap and 2700 s deadline. Scenario matching checks retiring aircraft and favors up to 180 s of extra common energy headroom before added flight cost. A healthy connected cohort may continue unfinished work while a larger task waits, subject to measured energy and return reserves. Energy clocks never reset on reassignment. Full recharge is {profile['recharge']:g} s; this is a declared endurance model, not a calibrated battery model.")
+    if v2:
+        p('With no announced work, a 30 s idle grace delays soft readiness withdrawal; the hard return reserve and a geometry-based wait limit still apply. A completed formation may wait for known chargers only when a forecast finds feasible admission and headroom for the announced follow-up cohort. The forecast uses copied flight records and time, repeats the runtime charge arithmetic at each step, and respects the finite-pad queue. It grants no real charge or mission credit: actual readiness is checked again before assignment. New announced work or aircraft failure invalidates the cached hold.')
+    p('A relay handoff requires measured replacement arrival and a GCS path, including during a short gap in announced tasks. Invalid numeric state cannot establish arrival or a safe mission budget. Replacements are reconciled when owners return or slots disappear. Loss of a GCS path triggers recovery even when local neighbors remain connected; return reserve takes priority over waiting indefinitely.')
+    p('Nominal relay altitude is 40 m, replacement approach 65 m and return routing 90 m where feasible. Every accepted segment is checked for speed, separation, geofence and connectivity. The motion planner can still stall or incur downtime; centralized full-state access and resource assumptions remain qualification limits.')
     new();title('5. Communication, sensing and fault recovery')
     p(f"The network uses a 100 m three-dimensional cutoff and {100*primary.get('packet_loss_per_attempt',.02):g}% independent loss per attempt. A logical packet advances at most one hop per {primary.get('dt_s',.5):g} s tick. Queue and retry time remain in measured latency; no-route offers remain in packet-delivery-ratio accounting.")
     if v2:
@@ -245,7 +255,7 @@ def make_pdf(runs,out,video_url=None):
         p('The actual PNG bytes are fragmented into mesh payloads. The GCS records delivery only after all chunks arrive and the assembled length and SHA-256 match the original capture. Retrying cannot refresh the acquisition timestamp. Captures, received images and supporting packet events are retained separately; the 10 s check applies from the first observation to complete image receipt. If a sensor carrier fails, a replacement can recapture from another safe altitude; the first observation deadline and both capture records are retained.')
     else:
         p('A geometric sensor footprint produces a synthetic report with an immutable detection timestamp. The first GCS receipt determines delay. This mode has no scene-camera image payload and cannot be presented as imagery-collection evidence.')
-    p('Scenario faults distinguish a missing link, an unavailable sole radio and permanent vehicle failure. Targets, injection times, durations and resolved selections are logged. Alternate relays cannot restore a disabled endpoint radio. A permanently frozen aircraft remains an obstacle and fails strict all-UAV landing. Separately labelled surviving-fleet completion never replaces strict checks.' if v2 else 'The baseline injects one 30 s relay radio outage or permanent relay failure after t=900 s. The disabled endpoint and permanently stranded vehicle remain strict failures; receipt from surviving sources is a separate service-recovery measurement.')
+    p('Scenario faults distinguish a missing link, an unavailable sole radio and permanent vehicle failure. Targets, injection times, durations and resolved selections are logged. Alternate relays cannot restore a disabled endpoint radio. A failed aircraft is excluded from charging and pad capacity; recharge cannot revive it. A permanently frozen aircraft remains an obstacle and fails strict all-UAV landing. Separately labelled surviving-fleet completion never replaces strict checks.' if v2 else 'The baseline injects one 30 s relay radio outage or permanent relay failure after t=900 s. The disabled endpoint and permanently stranded vehicle remain strict failures; receipt from surviving sources is a separate service-recovery measurement.')
     new();title('6. Safety and technical merit')
     p(f"Safety uses closest approach over simultaneous linear motion segments, not sampled endpoints alone. The first run plans for {profile['planning_separation']:g} m separation while the sample's measured minimum remains 20 m. Speed and geofence violations are vetoed; observed extrema, collision pairs and violations are retained. Kinematic margin is not proof against wind, tracking error, finite airframe size or arbitrary physical motion.")
     p('Landing requires fresh, settled position/velocity evidence at each own home pad, two consecutive settled seconds and disarm. An empty fleet, failed aircraft, return command or hover near home cannot establish mission completion. The deadline and charge checks are not relaxed to turn a fault case into a pass.')
@@ -278,7 +288,7 @@ def make_pdf(runs,out,video_url=None):
     story.append(Spacer(1,7))
     picture_width=320 if len(rows)>8 else 390
     story.append(PdfImage(str(out/'trajectory.png'),width=picture_width,height=picture_width*720/1280))
-    p('<b>Figure 3.</b> Recorded-state replay from R01; any labelled camera inset uses the latest received scene image. Geometry in the map remains kinematic.' if camera else '<b>Figure 3.</b> Recorded-state replay from R01. This is a kinematic map with synthetic observations, not camera imagery.')
+    p('<b>Figure 3.</b> Measured kinematic replay from R01; any labelled camera inset uses the latest received simulated scene image.' if camera else '<b>Figure 3.</b> Measured kinematic replay from R01 with synthetic footprint observations; this mode supplies no camera imagery.')
     passed=sum(bool(r['sample_constraints_passed']) for _,r in rows)
     failed_keys=sorted({key for _,r in rows for key,value in r['checks'].items() if not value})
     p(f"All {len(rows)} supplied runs are shown: {passed} pass and {len(rows)-passed} fail. R01 minimum separation: {_display_number(primary['minimum_separation_m'],4)} m; longest sortie: {_display_number(primary['maximum_sortie_s'])} s; battery exhaustions: {primary['battery_exhaustions']}; reporting misses: {len(primary['reporting_deadline_misses'])}.")
@@ -327,7 +337,7 @@ def main():
     args.output.mkdir(parents=True,exist_ok=False)
     make_video(args.runs[0],args.output);make_pdf(args.runs,args.output,args.video_url)
     (args.output/'validation-results.json').write_text(json.dumps(validation,indent=2),encoding='utf-8')
-    (args.output/'README.txt').write_text('TECHNICAL DRAFT - NOT SUBMITTED\nDemo replays recorded kinematic motion at 30x, with 5x fault windows and received-only scene-camera imagery where available.\nTeam identity, official scenario/log compliance and final submission review remain outstanding.\nSource and reproduction: repository README.md and docs/UAVX_VALIDATION.md.\n',encoding='utf-8')
+    (args.output/'README.txt').write_text('TECHNICAL DRAFT - NOT SUBMITTED\nDemo is a measured kinematic replay at 30x, with 5x fault windows and received-only simulated scene-camera imagery where available.\nTeam identity, official scenario/log compliance and final submission review remain outstanding.\nSource and reproduction: repository README.md and docs/UAVX_VALIDATION.md.\n',encoding='utf-8')
 
 
 if __name__=='__main__': main()

@@ -150,6 +150,17 @@ class UAVXSimulator:
     def _charging_allowed(self, uid):
         return True
 
+    def _charge_eligible(self, uid):
+        """Only an operational, grounded aircraft may use charging service."""
+        flight = self.flights[uid]
+        return (self.state.uavs[uid].is_operational() and flight.landed and not flight.armed
+                and flight.charge_started_s is not None
+                and all(math.isfinite(v) for v in (flight.charge_started_s,flight.remaining_s))
+                and flight.charge_started_s<=self.state.time and flight.remaining_s>=0.)
+
+    def _charge_after_step(self, remaining_s):
+        return min(1200.,remaining_s+self.dt*1200/self.recharge_s)
+
     def _validate_tasks(self):
         if not self.tasks or len({p.id for p in self.tasks}) != len(self.tasks):
             raise ValueError('tasks need unique IDs and cannot be empty')
@@ -244,12 +255,32 @@ class UAVXSimulator:
                 if slot not in self.slots:
                     self._return(uid,'chain_shortened')
             for slot,uid in list(self.replacements.items()):
-                self._return(uid,'handoff_replanned')
-            self.replacements.clear()
+                if slot not in self.slots or not self._eligible(uid, (*self.slots[slot][:2],65.)):
+                    self._return(uid,'handoff_replanned')
+                else:
+                    self.state.uavs[uid].target_position=Vector3D(*self.slots[slot][:2],65.)
+                    self.event('relay_handoff_retargeted',uav_id=uid,slot=slot)
             self.event('task_selected', poi_id=task.id, priority=task.priority, required_slots=count)
         # A partition can retain local neighbors while losing every GCS path.
         graph = self.router.network_graph
         gcs_connected = nx.node_connected_component(graph, -1) if -1 in graph else set()
+        # Required mission roles take precedence over optional rejuvenation.
+        for slot,uid in list(self.slot_owners.items()):
+            if not self.state.uavs[uid].is_operational() or self.flights[uid].returning:
+                self._release_slot(uid)
+        for slot,goal in self.slots.items():
+            if slot not in self.slot_owners:
+                candidates = [i for i in self.flights if self.flights[i].slot is None and self._eligible(i,goal)]
+                if not candidates:
+                    continue
+                uid = min(candidates, key=lambda i: self.state.uavs[i].distance_to(Vector3D(*goal)))
+                self.slot_owners[slot] = uid
+                self.flights[uid].slot = slot
+                self.event('role_assigned', uav_id=uid, role='scout' if slot==max(self.slots) else 'relay', slot=slot)
+            uid = self.slot_owners[slot]
+            u = self.state.uavs[uid]
+            u.target_position = Vector3D(*goal)
+            u.role = UAVRole.SCOUT if slot == max(self.slots) else UAVRole.RELAY
         # First retain safe current owners; release or replace low-energy relays.
         for slot,uid in list(self.slot_owners.items()):
             f,u = self.flights[uid],self.state.uavs[uid]
@@ -277,19 +308,6 @@ class UAVXSimulator:
                     self.event('relay_handoff_completed', old_uav_id=uid, new_uav_id=new, slot=slot)
                 elif f.remaining_s <= return_time:
                     self._return(uid, 'reserve_requires_return')
-        for slot,goal in self.slots.items():
-            if slot not in self.slot_owners:
-                candidates = [i for i in self.flights if self.flights[i].slot is None and self._eligible(i,goal)]
-                if not candidates:
-                    continue
-                uid = min(candidates, key=lambda i: self.state.uavs[i].distance_to(Vector3D(*goal)))
-                self.slot_owners[slot] = uid
-                self.flights[uid].slot = slot
-                self.event('role_assigned', uav_id=uid, role='scout' if slot==max(self.slots) else 'relay', slot=slot)
-            uid = self.slot_owners[slot]
-            u = self.state.uavs[uid]
-            u.target_position = Vector3D(*goal)
-            u.role = UAVRole.SCOUT if slot == max(self.slots) else UAVRole.RELAY
         for uid,f in self.flights.items():
             if f.armed and f.slot is None and not f.returning:
                 self._return(uid,'idle_energy_conservation')
@@ -345,7 +363,16 @@ class UAVXSimulator:
                 downtime+=(hi-lo)*self.dt
         return minimum,float(downtime)
 
+    def _transit_speed(self, uid):
+        """Keep the original footprint profile's radial deployment pacing."""
+        flight = self.flights[uid]
+        if (flight.slot is not None and not flight.returning and self.slots
+                and self.state.uavs[uid].position.z >= 39):
+            return 5. * (flight.slot + 1) / len(self.slots)
+        return 5.
+
     def _move(self):
+        step_end_s = round(self.state.time+self.dt,9)
         ids = list(self.state.uavs)
         starts = np.array([self.state.uavs[i].position.to_array() for i in ids],dtype=float)
         ends = starts.copy()
@@ -385,9 +412,7 @@ class UAVXSimulator:
                 f.armed, f.landed, f.settled_s = True, False, 0.
                 active.add(uid)
                 self.event('takeoff_started',uav_id=uid)
-            speed=5.
-            if f.slot is not None and not f.returning and self.slots and u.position.z>=39:
-                speed=5.*(f.slot+1)/len(self.slots)
+            speed=self._transit_speed(uid)
             desired = delta*min(1.,speed*self.dt/distance)
             candidates = [desired]
             if distance > 3:
@@ -435,7 +460,7 @@ class UAVXSimulator:
             u,f=self.state.uavs[uid],self.flights[uid]
             velocity=(ends[uid]-starts[uid])/self.dt
             u.position=Vector3D(*ends[uid]);u.velocity=Vector3D(*velocity)
-            f.observed_at_s=self.state.time+self.dt
+            f.observed_at_s=step_end_s
             self.max_speed=max(self.max_speed,float(np.linalg.norm(velocity)))
             self.max_altitude=max(self.max_altitude,float(ends[uid,2]))
             self.geofence_violations += int(not self._inside(ends[uid]))
@@ -444,7 +469,7 @@ class UAVXSimulator:
                 f.max_sortie_s=max(f.max_sortie_s,f.sortie_s)
                 if f.remaining_s <= 0:
                     self.exhaustions+=1;u.state=UAVState.FAILED;u.role=UAVRole.FAILED
-                    self.event('battery_exhausted',event_time_s=self.state.time+self.dt,uav_id=uid)
+                    self.event('battery_exhausted',event_time_s=step_end_s,uav_id=uid)
             u.battery_level=f.remaining_s/1200
             at_home=math.dist(ends[uid],f.home)<=.25 and np.linalg.norm(velocity)<=.15
             if f.returning and at_home and u.is_operational():
@@ -453,22 +478,22 @@ class UAVXSimulator:
                 # but completion still requires subsequent settled pose evidence.
                 f.armed=False
                 if measured_landing_complete(ends[uid],velocity,f.home,f.observed_at_s,
-                                             self.state.time+self.dt,f.armed,f.settled_s):
+                                             step_end_s,f.armed,f.settled_s):
                     if not f.landed:
-                        self.event('landing_confirmed',event_time_s=self.state.time+self.dt,uav_id=uid,position=ends[uid].tolist(),
+                        self.event('landing_confirmed',event_time_s=step_end_s,uav_id=uid,position=ends[uid].tolist(),
                                    velocity=velocity.tolist(),sortie_s=f.sortie_s,
                                    disarm_acknowledged=True,observed_at_s=f.observed_at_s,evidence='kinematic_state')
-                    f.landed=True;f.returning=False;f.charge_started_s=self.state.time+self.dt
+                    f.landed=True;f.returning=False;f.charge_started_s=step_end_s
                     u.target_position=None;u.state=UAVState.CHARGING;u.role=UAVRole.CHARGING
             else:
                 f.settled_s=0
-            if f.charge_started_s is not None and self._charging_allowed(uid):
+            if self._charge_eligible(uid) and self._charging_allowed(uid):
                 # Team assumption: 12-minute full recharge, no instantaneous reset.
-                f.remaining_s=min(1200.,f.remaining_s+self.dt*1200/self.recharge_s)
+                f.remaining_s=self._charge_after_step(f.remaining_s)
                 if f.remaining_s>=1200:
                     f.sortie_s=0.;f.charge_started_s=None
                     u.state=UAVState.IDLE;u.role=UAVRole.STANDBY
-                    self.event('recharge_completed',event_time_s=self.state.time+self.dt,uav_id=uid)
+                    self.event('recharge_completed',event_time_s=step_end_s,uav_id=uid)
             u.battery_level=f.remaining_s/1200
 
     def _network(self):
@@ -498,7 +523,7 @@ class UAVXSimulator:
             if e['type']!='delivered':
                 continue
             payload=e.get('payload') or {}
-            if 'poi_id' in payload:
+            if payload.get('kind') == 'poi_report' and 'poi_id' in payload:
                 p=next(p for p in self.tasks if p.id==payload['poi_id'])
                 if p.report_s is None:
                     p.report_s=e['time_s']

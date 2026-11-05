@@ -5,8 +5,10 @@ rendered camera pixels; complete image receipts, not metadata offers, establish
 report delivery. Failed aircraft never receive an exemption from strict checks.
 """
 import base64
+import copy
 from dataclasses import replace
 import hashlib
+import heapq
 import json
 import math
 from pathlib import Path
@@ -22,7 +24,7 @@ from simulation.uavx import UAVXSimulator, SurveyTask, RangeChannel
 from simulation.uavx_scenario import ScenarioConfig, ScenarioTask
 
 
-def _protected_graph_score(adjacent, fleet_size):
+def _protected_graph_score(adjacent, fleet_size, protected_nodes=None):
     """Reachability first, then root-biconnected vertices; row zero is GCS.
 
     One Tarjan traversal avoids constructing a NetworkX graph for every trial
@@ -48,14 +50,15 @@ def _protected_graph_score(adjacent, fleet_size):
                 visit(other, node)
                 low[node] = min(low[node], low[other])
                 if low[other] >= discovered[node]:
-                    size = 0
+                    size = eligible = 0
                     while True:
                         member = stack.pop()
                         size += 1
+                        eligible += int(protected_nodes is None or member in protected_nodes)
                         if member == other:
                             break
                     if node == 0 and size >= 2:
-                        protected += size
+                        protected += eligible
             else:
                 low[node] = min(low[node], discovered[other])
 
@@ -66,6 +69,7 @@ def _protected_graph_score(adjacent, fleet_size):
 class ResilientUAVXSimulator(UAVXSimulator):
     schema_version = 2
     CHUNK_BYTES = 512
+    TASK_HEADROOM_S = 180.
 
     def __init__(self, scenario: ScenarioConfig):
         if not isinstance(scenario, ScenarioConfig):
@@ -108,12 +112,24 @@ class ResilientUAVXSimulator(UAVXSimulator):
         self._protection_samples = []
         self._next_protection_sample = 0.
         self._charge_admission = set()
+        self._landing_yields = {}
+        self._withdrawal_reason = None
+        self._idle_since_s = None
+        self._next_assignment_s = 0.
+        self._hold_ready_s = None
+        self._hold_signature = None
         root = Path(__file__).resolve().parents[1]
         for name in ('simulation/resilient_uavx.py', 'simulation/uavx_scenario.py', 'simulation/camera_sensor.py'):
             self.source_sha256[name] = hashlib.sha256((root/name).read_bytes()).hexdigest()
 
     def _charging_allowed(self, uid):
         return uid in self._charge_admission
+
+    def _transit_speed(self, uid):
+        # Near relays and replacements must close gaps promptly in this
+        # protected formation. Every movement still passes the base safety
+        # and network admission checks, including the 5 m/s hard limit.
+        return 5.
 
     def _select_task(self, available, current):
         priority = max(p.priority for p in available)
@@ -127,14 +143,521 @@ class ResilientUAVXSimulator(UAVXSimulator):
         return min((p for p in available if p.priority==priority),
                    key=lambda p:(math.dist(origin,p.position),p.spawn_s,p.id))
 
+    def _withdrawal_path_s(self, positions=None):
+        """Common retreat path estimate, including climb and home descent.
+
+        Every participating relay may have to serve the most distant aircraft
+        before landing. Use that common obligation rather than only the inner
+        relay's short distance home. The additional energy reserve is applied
+        separately; this is a planning estimate, not measured flight evidence.
+        """
+        points = list(positions or ())
+        points.extend(tuple(u.position.to_array()) for uid,u in self.state.uavs.items()
+                      if self.flights[uid].armed and u.is_operational())
+        if not points:
+            return 0.
+        distance = max(math.hypot(p[0]-f.home[0],p[1]-f.home[1])
+                       for p in points for f in self.flights.values())
+        return distance / 5. + 36.
+
+    def _budgeted_assignment(self, task, preserve_owners=False):
+        """Find a complete injective assignment with a shared return reserve.
+
+        First select feasible cohorts by added fleet flight time, then uncross
+        deployment by minimizing squared travel and favor shared energy slack.
+        Common deployment bounds
+        enforce selected and retiring aircraft budgets during matching, so a
+        bad cheapest assignment cannot hide a different feasible cohort.
+        No ownership or flight clock changes during this search.
+        """
+        for uid,flight in self.flights.items():
+            uav = self.state.uavs[uid]
+            if uav.is_operational() and not all(math.isfinite(value) for value in (
+                    *uav.position.to_array(), flight.remaining_s, flight.sortie_s)):
+                # An unselected aircraft still owes a measured safe return;
+                # unknown energy/position cannot silently waive that budget.
+                return None
+        goals = self._build_slots(task)
+        work_s = max(0.,30.-task.dwell_s) + 10.
+        retreat_s = self._withdrawal_path_s(goals.values())
+        common_energy_s = work_s + retreat_s + 180.
+        deadline_s = 2700.-self.state.time-work_s-retreat_s-30.
+        if deadline_s < 0.:
+            return None
+        candidates = {}
+        retirement_caps = {}
+        graph = self.router.network_graph
+        connected = nx.node_connected_component(graph,-1) if -1 in graph else set()
+        for uid,f in self.flights.items():
+            u = self.state.uavs[uid]
+            available_s = min(f.remaining_s,1200.-f.sortie_s)
+            if f.armed and not f.returning and u.is_operational():
+                own_return_s = (math.hypot(u.position.x-f.home[0],u.position.y-f.home[1])+180.)/5.
+                retirement_caps[uid] = available_s-own_return_s-180.
+            if (not u.is_operational() or f.returning or f.charge_started_s is not None
+                    or (f.armed and uid not in connected)):
+                continue
+            if not math.isfinite(available_s) or available_s < common_energy_s:
+                continue
+            candidates[uid] = available_s
+        if len(candidates) < len(goals):
+            return None
+
+        def travel_time(uid, goal):
+            position = self.state.uavs[uid].position.to_array()
+            if position[2]<39. and math.dist(position[:2],goal[:2])>5.:
+                return (40.-position[2]+math.dist((*position[:2],40.),goal))/5.
+            return math.dist(position,goal)/5.
+
+        transit, costs, squared = {}, {}, {}
+        width = (1200000+1)*(len(self.flights)+1)
+        for uid in candidates:
+            position = self.state.uavs[uid].position.to_array()
+            home = self.flights[uid].home
+            owed_return_s = ((math.dist(position[:2],home[:2])+max(0.,90.-position[2])+90.)/5.
+                             if self.flights[uid].armed else 0.)
+            for slot,goal in goals.items():
+                travel_s = travel_time(uid,goal)
+                eventual_return_s = (math.dist(goal[:2],home[:2])+max(0.,90.-goal[2])+90.)/5.
+                added_ms = round((travel_s+eventual_return_s-owed_return_s)*1000)
+                transit[uid,slot] = travel_s
+                costs[uid,slot] = ((-added_ms*width+round(candidates[uid]*1000))
+                                   *(len(self.flights)+1)+int(self.slot_owners.get(slot)==uid))
+                # For a straight chain, this convex cost assigns aircraft in
+                # projected spatial order. Linear distance has near ties that
+                # can place an outer owner behind an already settled relay.
+                squared[uid,slot] = -round(math.dist(position,goal)**2*1000)
+
+        # An in-progress handoff is already a commitment. Retain it where
+        # possible; only reclaim that aircraft if a full mission cannot be
+        # assigned without it.
+        handoffs = {slot:uid for slot,uid in self.replacements.items()
+                    if slot in goals and uid in candidates
+                    and self._eligible(uid,(*goals[slot][:2],65.))}
+        handoff_transit = {uid:travel_time(uid,(*goals[slot][:2],65.))
+                           for slot,uid in handoffs.items()}
+        # A feasible cohort has a nonempty interval from its longest travel to
+        # its tightest selected/retiring/deadline cap. Enumerating those upper
+        # endpoints is complete under this declared planning budget.
+        bounds = sorted({min(deadline_s,cap) for cap in
+                         [deadline_s,*(v-common_energy_s for v in candidates.values()),
+                          *retirement_caps.values()] if math.isfinite(cap) and cap>=0.})
+
+        def match(allowed, bound, objective, required=()):
+            mandatory = set(required)
+            if not mandatory<=allowed:
+                return None
+            edges = [(uid,slot) for uid in sorted(allowed) for slot in goals
+                     if transit[uid,slot]<=bound+1e-8
+                     and (not preserve_owners or self.slot_owners.get(slot) not in allowed
+                          or uid==self.slot_owners[slot])]
+            if not edges:
+                return None
+            values = [objective[pair] for pair in edges]
+            bonus = (max(values)-min(values))*len(goals)+1
+            graph = nx.Graph()
+            graph.add_nodes_from(('slot',slot) for slot in goals)
+            for uid,slot in edges:
+                graph.add_edge(('uav',uid),('slot',slot),
+                               weight=objective[uid,slot]+bonus*int(uid in mandatory))
+            pairs = nx.max_weight_matching(graph,maxcardinality=True)
+            assignment = {}
+            for left,right in pairs:
+                if left[0]=='slot': left,right=right,left
+                assignment[right[1]]=left[1]
+            if len(assignment)!=len(goals) or not mandatory<=set(assignment.values()):
+                return None
+            return assignment
+
+        for reclaim_handoffs in (False,True):
+            best = None
+            for bound in bounds:
+                allowed = {uid for uid,energy in candidates.items()
+                           if energy+1e-8>=common_energy_s+bound}
+                if not reclaim_handoffs:
+                    allowed -= set(handoffs.values())
+                if len(allowed)<len(goals):
+                    continue
+                safe_handoffs = {slot:uid for slot,uid in handoffs.items()
+                                 if candidates[uid]+1e-8>=common_energy_s+bound
+                                 and handoff_transit[uid]<=bound+1e-8}
+                mandatory = {uid for uid,cap in retirement_caps.items() if cap<bound-1e-8}
+                mandatory -= set(safe_handoffs.values())
+                assignment = match(allowed,bound,costs,mandatory)
+                if assignment is None:
+                    continue
+                # Keep the chosen energy cohort, but remove crossing role
+                # order before movement. All new edges obey the same bound.
+                assignment = match(set(assignment.values()),bound,squared)
+                if assignment is None:
+                    continue
+                retained_handoffs = {slot:uid for slot,uid in handoffs.items()
+                                     if slot in safe_handoffs and uid not in assignment.values()}
+                deploy_s = max([transit[uid,slot] for slot,uid in assignment.items()]
+                               + [handoff_transit[uid] for uid in retained_handoffs.values()])
+                retained = set(assignment.values()) | set(retained_handoffs.values())
+                if (any(candidates[uid]+1e-8<deploy_s+common_energy_s for uid in retained)
+                        or deploy_s>deadline_s+1e-8
+                        or any(cap+1e-8<deploy_s for uid,cap in retirement_caps.items() if uid not in retained)):
+                    continue
+                # A slightly shorter deployment is not useful if its oldest
+                # owner immediately forces the whole formation to withdraw.
+                # Prefer up to three minutes of headroom for later announced
+                # work. Beyond that, reuse beats churning healthy aircraft for
+                # a fresh pad cohort merely to maximize an unused battery.
+                slack_s = min(candidates[uid] for uid in retained)-deploy_s-common_energy_s
+                score = (min(self.TASK_HEADROOM_S,slack_s), sum(costs[uid,slot] for slot,uid in assignment.items()),
+                         sum(squared[uid,slot] for slot,uid in assignment.items()),-deploy_s)
+                if best is None or score>best[0]:
+                    best = (score,dict(goals=goals,owners=assignment,handoffs=retained_handoffs,
+                                       deployment_s=deploy_s,withdrawal_path_s=retreat_s,
+                                       required_energy_s=deploy_s+common_energy_s))
+            if best is not None:
+                return best[1]
+        if preserve_owners:
+            return self._budgeted_assignment(task,preserve_owners=False)
+        return None
+
+    def _commit_formation(self, task, assignment):
+        """Commit targets only; measured motion and sensing establish results."""
+        old_active = self.active_id
+        previous = dict(self.slot_owners)
+        self.slots = assignment['goals']
+        # Matching returns an unordered set of pairs. Later handoff dispatch
+        # consumes spare aircraft in owner order, so canonicalize by slot to
+        # make a seeded mission independent of Python's process hash seed.
+        self.slot_owners = dict(sorted(assignment['owners'].items()))
+        self.replacements = dict(sorted(assignment['handoffs'].items()))
+        retained = set(self.slot_owners.values()) | set(self.replacements.values())
+        for uid,f in self.flights.items():
+            f.slot = None
+            if uid not in retained and not f.returning:
+                self._return(uid,'formation_energy_reassignment')
+        for slot,uid in self.slot_owners.items():
+            f,u = self.flights[uid],self.state.uavs[uid]
+            f.slot = slot
+            u.target_position = Vector3D(*self.slots[slot])
+            u.role = UAVRole.SCOUT if slot==max(self.slots) else UAVRole.RELAY
+            if previous.get(slot)!=uid:
+                self.event('role_assigned',uav_id=uid,role=u.role.value,slot=slot)
+        for slot,uid in self.replacements.items():
+            self.flights[uid].slot = slot
+            self.state.uavs[uid].target_position = Vector3D(*self.slots[slot][:2],65.)
+            if task.id!=old_active:
+                self.event('relay_handoff_retargeted',uav_id=uid,slot=slot)
+        self.active_id = task.id
+        self._idle_since_s = None
+        self._hold_ready_s = self._hold_signature = None
+        self._next_assignment_s = self.state.time + 5.
+        self.event('formation_committed',poi_id=task.id,owners=dict(self.slot_owners),
+                   deployment_budget_s=assignment['deployment_s'],
+                   withdrawal_path_budget_s=assignment['withdrawal_path_s'],
+                   required_energy_s=assignment['required_energy_s'])
+        if task.id!=old_active:
+            self.event('task_selected',poi_id=task.id,priority=task.priority,required_slots=len(self.slots))
+
+    def _start_connected_withdrawal(self, reason):
+        """Withdraw the entire active group before emergency reserves expire."""
+        active = [uid for uid,f in self.flights.items()
+                  if self.state.uavs[uid].is_operational() and (f.armed or not f.landed)]
+        if self._withdrawal_reason is None and active:
+            self._withdrawal_reason = reason
+            self.event('connected_withdrawal_started',reason=reason,
+                       path_budget_s=self._withdrawal_path_s(),
+                       uav_ids=active)
+        # Clear reservations together so release_slot cannot promote a relay
+        # into a formation which is already withdrawing.
+        self.slot_owners.clear()
+        self.replacements.clear()
+        self.slots.clear()
+        for uid,f in self.flights.items():
+            f.slot = None
+            self._return(uid,reason)
+        self._idle_since_s = None
+        self._hold_ready_s = self._hold_signature = None
+
+    def _plan_formation(self):
+        now = self.state.time
+        if self._withdrawal_reason is not None:
+            pending = [uid for uid,f in self.flights.items()
+                       if self.state.uavs[uid].is_operational() and (f.armed or not f.landed)]
+            if pending:
+                self._start_connected_withdrawal(self._withdrawal_reason)
+                return
+            self.event('connected_withdrawal_landed',reason=self._withdrawal_reason)
+            self._withdrawal_reason = None
+            self._next_assignment_s = now
+        remaining = [p for p in self.tasks if not (p.surveyed and p.report_s is not None)]
+        if not remaining:
+            self.shutdown = True
+            self._start_connected_withdrawal('mission_return')
+            return
+        if now + self._withdrawal_path_s() + 30. >= 2700.:
+            self.shutdown = True
+            self._start_connected_withdrawal('mission_deadline_return')
+            return
+        # Reconcile actual failures first, retaining the base promotion rules.
+        for uid,f in list(self.flights.items()):
+            if f.slot is not None and (f.returning or not self.state.uavs[uid].is_operational()):
+                self._release_slot(uid)
+        available = [p for p in remaining if p.spawn_s<=now]
+        if not available:
+            self._complete_idle_handoffs()
+            if self._idle_since_s is None: self._idle_since_s = now
+            # Holding a connected formation briefly avoids a return/relaunch
+            # cycle that costs more flight time than the announcement gap.
+            # The bound uses measured geometry, never future task times.
+            grace_s = max(30.,2.*max(0.,self._withdrawal_path_s()-36.)+30.)
+            # Idle time must not spend the allowance needed for another
+            # survey and useful deployment. Otherwise a long announcement
+            # gap leaves only return energy and delays the next charge cycle.
+            # This uses current geometry, not future task times or positions.
+            hard_reserve_s = self._withdrawal_path_s()+180.
+            reserve_s = hard_reserve_s+40.+self.TASK_HEADROOM_S
+            energies = [min(f.remaining_s,1200.-f.sortie_s)
+                        for uid,f in self.flights.items()
+                        if f.armed and not f.returning and self.state.uavs[uid].is_operational()]
+            hard_low = any(energy<=hard_reserve_s for energy in energies)
+            readiness_low = any(energy<=reserve_s for energy in energies)
+            idle_s = now-self._idle_since_s
+            if hard_low or (idle_s>=30. and readiness_low) or idle_s>=grace_s:
+                self._start_connected_withdrawal('waiting_for_announced_tasks')
+            return
+        self._idle_since_s = None
+        current = next((p for p in available if p.id==self.active_id),None)
+        task = self._select_task(available,current)
+        goals = self._build_slots(task)
+        missing = set(goals)-set(self.slot_owners)
+        common_floor = self._withdrawal_path_s(goals.values())+180.+max(0.,30.-task.dwell_s)+10.
+        low = any(min(self.flights[uid].remaining_s,1200.-self.flights[uid].sortie_s)<=common_floor
+                  for uid in self.slot_owners.values())
+        needs_assignment = task.id!=self.active_id or bool(missing) or low
+        if needs_assignment:
+            if not self.slot_owners and now<self._next_assignment_s:
+                return
+            assignment = self._budgeted_assignment(task,preserve_owners=bool(missing) and not low and task.id==self.active_id)
+            if assignment is None and task is not current:
+                # Proximity alone can strand a ready small cohort while the
+                # preferred task waits for more chargers. Try other announced
+                # work at the same priority before waiting or withdrawing.
+                # A current unfinished task retains equal-priority authority.
+                alternatives = [p for p in available
+                                if p.id!=task.id and p.priority==task.priority]
+                while alternatives:
+                    candidate = self._select_task(alternatives,None)
+                    alternatives.remove(candidate)
+                    proposal = self._budgeted_assignment(candidate)
+                    if proposal is not None:
+                        self.event('task_admission_alternative',preferred_poi_id=task.id,
+                                   selected_poi_id=candidate.id,priority=candidate.priority)
+                        task,assignment = candidate,proposal
+                        break
+            self._next_assignment_s = now+5.
+            if assignment is None:
+                self._complete_idle_handoffs()
+                if self._can_hold_formation(common_floor):
+                    # A newly announced task may need more charged aircraft.
+                    # Keep the healthy existing assignment progressing while
+                    # admission waits; do not launch a partial new formation
+                    # or force a needless landing/recharge cycle.
+                    active = next((p for p in self.tasks if p.id==self.active_id),None)
+                    if active is not None and not (active.surveyed and active.report_s is not None):
+                        return
+                    signature = (task.id,tuple(sorted(p.id for p in available)),
+                                 tuple(uid for uid,uav in self.state.uavs.items() if uav.is_operational()))
+                    if self._hold_signature==signature and self._hold_ready_s is not None and now<self._hold_ready_s:
+                        return
+                    ready_s = self._forecast_charge_admission(task)
+                    if ready_s is not None:
+                        self._hold_signature,self._hold_ready_s = signature,ready_s
+                        self.event('formation_waiting_for_charge',poi_id=task.id,
+                                   expected_ready_s=ready_s,forecast_only=True)
+                        return
+                if any(f.armed and self.state.uavs[uid].is_operational() for uid,f in self.flights.items()):
+                    self._start_connected_withdrawal('formation_admission_failed')
+                return
+            self._commit_formation(task,assignment)
+        super()._plan()
+
+    def _forecast_charge_admission(self, task):
+        """Predict whether waiting for known chargers leaves a useful cohort.
+
+        This decides hold versus return only. Isolated flight records and a
+        copied planning clock never grant charge, mission or arrival credit;
+        real admission still requires measured readiness on a later step.
+        Returning-aircraft arrivals are not assumed by this forecast.
+        """
+        queued = sorted((f.charge_started_s,uid) for uid,f in self.flights.items()
+                        if self._charge_eligible(uid))
+        if not queued:
+            return None
+        servers = [0]*(self.scenario.charging_pads or len(self.flights))
+        horizon_steps = max(0,math.ceil((2700.-self.state.time)/self.dt)-1)
+        ready = {}
+        for _,uid in queued:
+            energy = self.flights[uid].remaining_s
+            begin = heapq.heappop(servers)
+            finish = horizon_steps+1
+            # Repeat the actual floating-point step arithmetic. Rounding a
+            # continuous duration can predict completion one interval early.
+            # The mission horizon bounds work even for very slow chargers.
+            for step in range(begin+1,horizon_steps+1):
+                energy = self._charge_after_step(energy)
+                if energy>=1200.:
+                    finish = step
+                    ready[uid] = step*self.dt
+                    break
+            heapq.heappush(servers,finish)
+        next_roles = max((len(self._build_slots(p)) for p in self.tasks
+                          if p.id!=task.id and p.spawn_s<=self.state.time
+                          and not (p.surveyed and p.report_s is not None)),default=0)
+        reserve_s = self._withdrawal_path_s(self._build_slots(task).values())+180.+max(0.,30.-task.dwell_s)+10.
+        for wait_s in sorted(set(ready.values())):
+            if self.state.time+wait_s>=2700.:
+                break
+            future = copy.copy(self)
+            future.state = copy.copy(self.state)
+            future.state.time += wait_s
+            future.flights = {uid:replace(f) for uid,f in self.flights.items()}
+            for uid,flight in future.flights.items():
+                if flight.armed:
+                    flight.remaining_s -= wait_s
+                    flight.sortie_s += wait_s
+                if uid in ready and ready[uid]<=wait_s:
+                    flight.remaining_s,flight.sortie_s = 1200.,0.
+                    flight.charge_started_s = None
+            if not future._can_hold_formation(reserve_s):
+                break
+            proposal = future._budgeted_assignment(task)
+            if proposal is not None:
+                retained = set(proposal['owners'].values()) | set(proposal['handoffs'].values())
+                # A smaller follow-up task needs a capable subset, not extra
+                # endurance on every owner of the current larger formation.
+                margins = sorted((min(future.flights[uid].remaining_s,1200.-future.flights[uid].sortie_s)
+                                  -proposal['required_energy_s'] for uid in retained),reverse=True)
+                needed = min(next_roles,len(margins))
+                if not needed or margins[needed-1]>=self.TASK_HEADROOM_S:
+                    return future.state.time
+        return None
+
+    def _can_hold_formation(self, reserve_s):
+        """An existing connected cohort may wait only above its shared reserve."""
+        if (not math.isfinite(reserve_s) or not self.slots
+                or set(self.slot_owners)!=set(self.slots)):
+            return False
+        for uid,flight in self.flights.items():
+            uav = self.state.uavs[uid]
+            if flight.armed and uav.is_operational():
+                if not all(math.isfinite(value) for value in (
+                        *uav.position.to_array(),flight.remaining_s,flight.sortie_s)):
+                    return False
+                # Early hold returns also bypass the base planner for
+                # replacements and unassigned aircraft; protect them too.
+                if (not flight.returning
+                        and min(flight.remaining_s,1200.-flight.sortie_s)<=reserve_s):
+                    return False
+        for slot,uid in self.slot_owners.items():
+            flight,uav = self.flights[uid],self.state.uavs[uid]
+            if (not uav.is_operational() or not flight.armed or flight.returning
+                    or flight.slot!=slot or not uav.connected_to_gcs
+                    or not all(math.isfinite(value) for value in (
+                        *uav.position.to_array(),flight.remaining_s,flight.sortie_s))
+                    or min(flight.remaining_s,1200.-flight.sortie_s)<=reserve_s):
+                return False
+        return True
+
+    def _complete_idle_handoffs(self):
+        """Finish already committed, observed handoffs without selecting future work.
+
+        The base planner returns the fleet when no task is announced. The
+        bounded formation hold intentionally overrides that behavior, but it
+        must still retire an incumbent whose replacement has actually arrived.
+        No dispatch, time, charge or predicted-arrival credit is introduced.
+        """
+        for slot,new in list(self.replacements.items()):
+            old=self.slot_owners.get(slot)
+            if old is None or old==new or slot not in self.slots:
+                continue
+            replacement=self.state.uavs[new]
+            flight=self.flights[new]
+            goal=Vector3D(*self.slots[slot][:2],65.)
+            if (not replacement.is_operational() or not flight.armed
+                    or flight.returning or flight.slot!=slot
+                    or not replacement.connected_to_gcs
+                    or not replacement.distance_to(goal)<=3.):
+                continue
+            self._return(old,'measured_relay_handoff')
+            self.slot_owners[slot]=new
+            self.replacements.pop(slot,None)
+            replacement.target_position=Vector3D(*self.slots[slot])
+            replacement.role=UAVRole.SCOUT if slot==max(self.slots) else UAVRole.RELAY
+            self.event('relay_handoff_completed',old_uav_id=old,new_uav_id=new,slot=slot)
+
     def _move(self):
         # Admission is frozen for this interval. A pad released during the loop
         # becomes available next interval, never supplies two full dt charges.
         waiting = sorted((f.charge_started_s, i) for i,f in self.flights.items()
-                         if f.charge_started_s is not None)
+                         if self._charge_eligible(i))
         count = self.scenario.charging_pads or len(self.flights)
         self._charge_admission = {i for _,i in waiting[:count]}
-        super()._move()
+        restored = self._clear_landing_corridors()
+        try:
+            super()._move()
+        finally:
+            for uid,(target,slot) in restored.items():
+                # Slot identity must survive a failure during the temporary
+                # yield so the next planner pass can release its ownership.
+                self.flights[uid].slot = slot
+                if self.state.uavs[uid].is_operational():
+                    self.state.uavs[uid].target_position = target
+
+    def _clear_landing_corridors(self):
+        """Let returning vehicles descend through their own home-pad column.
+
+        A relay hovering above a home pad can otherwise indefinitely obstruct
+        landing. It temporarily yields sideways; ordinary speed, separation,
+        geofence and network admission still govern every measured movement.
+        """
+        homes = {uid:f.home for uid,f in self.flights.items()
+                 if f.returning and f.armed and self.state.uavs[uid].is_operational()
+                 and math.dist(self.state.uavs[uid].position.to_array()[:2],f.home[:2])<80.}
+        restored = {}
+        active_yields = {}
+        for uid,u in self.state.uavs.items():
+            flight = self.flights[uid]
+            if not flight.armed or flight.returning or not u.is_operational() or u.target_position is None:
+                continue
+            position = u.position.to_array()
+            target = u.target_position.to_array()
+            blocked = [rid for rid,home in homes.items()
+                       if min(math.dist(position[:2],home[:2]),math.dist(target[:2],home[:2]))<30.]
+            if not blocked:
+                continue
+            chosen = self._landing_yields.get(uid)
+            if chosen is None or any(math.dist(chosen[:2],h[:2])<30. for h in homes.values()):
+                candidates = []
+                for radius in (35.,55.,75.):
+                    for angle in np.linspace(0.,2*math.pi,16,endpoint=False):
+                        point = (position[0]+radius*math.cos(angle),position[1]+radius*math.sin(angle),max(40.,position[2]))
+                        if not self._inside(point) or any(math.dist(point[:2],h[:2])<30. for h in homes.values()):
+                            continue
+                        if any(math.dist(point,v.position.to_array())<25. for i,v in self.state.uavs.items() if i!=uid):
+                            continue
+                        candidates.append((radius,math.dist(point,target),point))
+                    if candidates:
+                        break
+                if not candidates:
+                    continue
+                chosen = min(candidates)[2]
+                self.event('landing_corridor_yield',uav_id=uid,home_uavs=blocked,target=list(chosen))
+            active_yields[uid] = chosen
+            restored[uid] = (u.target_position,flight.slot)
+            u.target_position = Vector3D(*chosen)
+            # Yield uses the normal 5 m/s cap rather than slow radial-slot
+            # deployment pacing, while retaining all swept movement vetoes.
+            flight.slot = None
+        self._landing_yields = active_yields
+        return restored
 
     def _reachable_count(self, positions, reference_positions=None):
         if not self.scenario.relay_protection:
@@ -161,7 +684,13 @@ class ResilientUAVXSimulator(UAVXSimulator):
         # This hook is only the motion admission score, never an availability
         # metric. Connectivity remains dominant; within a connected component
         # retain redundant paths during deployments, replacements and pivots.
-        endpoint_score = _protected_graph_score(adjacent, len(self.flights))
+        # Retain backup paths for mission-carrying aircraft. A returning
+        # aircraft still needs the continuous primary path, but requiring it
+        # to keep two paths can delay recovery and consume its return reserve.
+        mission_nodes = {indices[uid] for uid in live
+                         if not self.flights[uid].returning
+                         and (self.flights[uid].armed or self.state.uavs[uid].target_position is not None)}
+        endpoint_score = _protected_graph_score(adjacent, len(self.flights), mission_nodes)
         if conservative is None:
             return endpoint_score
         reached = np.zeros(len(ids), dtype=bool)
@@ -263,7 +792,7 @@ class ResilientUAVXSimulator(UAVXSimulator):
         return nodes, edges
 
     def _plan(self):
-        super()._plan()
+        self._plan_formation()
         obstacles = [u.position.to_array() for u in self.state.uavs.values() if not u.is_operational()]
         if not obstacles or self.shutdown:
             return

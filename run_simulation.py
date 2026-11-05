@@ -65,7 +65,8 @@ def main():
     parser.add_argument("--repeat", action="store_true", help="Repeat GUI missions in separate numbered evidence folders")
     parser.add_argument("--auto-close", action="store_true", help="Close GUI after this run, useful for verification")
     parser.add_argument("--profile", choices=["uavx", "legacy"], default="uavx")
-    parser.add_argument("--fleet-size", type=int, default=None)
+    parser.add_argument("--fleet-size", type=int, default=None,
+                        help="Default 30 UAVs including spares; overrides are diagnostic runs")
     parser.add_argument("--packet-loss", type=float, default=None)
     parser.add_argument("--scenario-file", type=Path, help="Validated UAV-X JSON scenario with resources, sensing and faults")
     parser.add_argument("--disturbance", choices=["none", "outage", "failure"], default="none")

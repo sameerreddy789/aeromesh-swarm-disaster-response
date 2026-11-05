@@ -28,3 +28,17 @@ venv/
 evidence/
 submission-artifacts/
 projectairsim_client.log
+
+# Downloaded upstream city sources and assets (pinned by integration setup)
+external/valdrada/
+
+# Unreal generated state and downloaded geometry
+integrations/unreal/AeroMeshCity/Binaries/
+integrations/unreal/AeroMeshCity/Intermediate/
+integrations/unreal/AeroMeshCity/Saved/
+integrations/unreal/AeroMeshCity/DerivedDataCache/
+integrations/unreal/AeroMeshCity/Content/
+integrations/unreal/data/
+
+# Preserved local legacy checkout; it was an unmapped, unused gitlink.
+/aeromesh-swarm-disaster-response/

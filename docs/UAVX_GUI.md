@@ -1,4 +1,4 @@
-# Live AeroMesh simulation — 5 November 2026
+# Live AeroMesh simulation - 6 November 2026
 
 `Start-AeroMesh.cmd` opens this repository's updated UAV-X simulation in a native
 pygame window titled **AeroMesh UAV-X | Live Swarm Simulation**. It uses
@@ -13,7 +13,7 @@ labelled as baseline evidence.
 Double-click `Start-AeroMesh.cmd` from the repository root on Windows. It uses
 Python 3.10, creates `.venv` if absent, and installs the exact `requirements-repro.txt` versions if the
 GUI dependencies are missing. Internet access is needed for that first install.
-The default scenario explicitly uses 60 UAVs, seed 42, a Panda3D scene camera, protected relay spacing, no injected fault and 12x requested
+The default scenario explicitly uses 30 UAVs, seed 42, a Panda3D scene camera, protected relay spacing, no injected fault and 12x requested
 playback. Actual speed depends on the host; model speed remains limited to 5 m/s.
 
 For a slower launch or a fault demonstration:
@@ -54,6 +54,26 @@ The window stays open at mission end. `--auto-close` closes after one run;
 `--repeat` starts another after a four-second result display. These flags are
 mutually exclusive. Closing early records incomplete checks rather than success.
 
+## Current 30-UAV GUI verification
+
+The current scenario-camera GUI run is preserved locally at
+`evidence/fleet30-core-live-final-01`. It completed at **1970 simulated seconds**
+with **10/10 PoIs surveyed and received, all 30 UAVs landed, and all 14 checks
+passing**. Independent evidence verification reported no errors.
+
+Its `metrics.json`, `events.json`, `packets.json`, `connectivity.json` and
+`trajectory.jsonl` are byte-identical to the final matrix's nominal seed-42
+case. The GUI therefore observes the same recorded mission behavior as that
+headless run; playback speed and visualization do not grant different mission
+credit. This comparison covers those five core files, not every viewer artifact.
+
+The saved `viewer/final.png` surface was visually inspected and showed a clean
+completed-state display. The desktop capture helper could not initialize in
+this session, so this visual check used the GUI's saved surface and telemetry.
+The verification summary and final image are included in the final package
+evidence archive.
+See [current validation](UAVX_VALIDATION.md) for matrix status and model limits.
+
 ## Preserved baseline validation and saved evidence
 
 The measurements below describe the earlier 30-UAV footprint profile. The new
@@ -78,7 +98,7 @@ Run artifacts remain `metrics.json`, `events.json`, `packets.json`,
 and `final.png`. Viewer snapshots are visual diagnostics, outside the five core
 artifacts hashed by the run manifest. Full local runs are ignored by Git.
 
-Current compact evidence is in
+Historical compact evidence is in
 [gui-benchmark-summary.json](verification/uavx/gui-benchmark-summary.json).
 Full commands and measurements are in [validation](UAVX_VALIDATION.md).
 

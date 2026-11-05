@@ -73,6 +73,29 @@ def test_landing_airborne_detour_does_not_restart_blocked_descent():
     assert u.position.z<50.
 
 
+def test_hovering_relay_yields_clear_landing_column_before_charge_exhaustion():
+    sim=ResilientUAVXSimulator(ScenarioConfig(camera_mode='footprint',fleet_size=60))
+    returning,relay=28,29
+    home=sim.flights[returning].home
+    u=sim.state.uavs[returning];flight=sim.flights[returning]
+    u.position=Vector3D(home[0],home[1],90.);u.target_position=Vector3D(*home)
+    u.state=UAVState.RETURNING
+    flight.armed=True;flight.landed=False;flight.returning=True;flight.remaining_s=88.
+    obstacle=sim.state.uavs[relay];of=sim.flights[relay]
+    obstacle.position=Vector3D(home[0],home[1],40.)
+    obstacle.target_position=Vector3D(home[0],home[1],40.)
+    obstacle.role=UAVRole.RELAY;obstacle.state=UAVState.RELAYING
+    of.armed=True;of.landed=False;of.slot=0
+    sim.slots={0:tuple(obstacle.position.to_array())}
+    for _ in range(170):
+        sim._move();sim.state.time+=sim.dt
+        if flight.landed:break
+    assert flight.landed and not flight.armed and sim.exhaustions==0
+    assert sim.min_separation>=22.-1e-8 and sim.max_speed<=5.+1e-8
+    assert of.slot==0
+    assert any(event['type']=='landing_corridor_yield' for event in sim.events)
+
+
 def settled_backbone(protected=True):
     sim = ResilientUAVXSimulator(near_config(relay_protection=protected, camera_mode='footprint'))
     task = sim.tasks[0]
@@ -108,6 +131,8 @@ def test_movement_admission_preserves_second_path_while_column_deploys():
     for uid,u in sim.state.uavs.items():
         if uid>=4:
             u.state=UAVState.FAILED
+        else:
+            sim.flights[uid].armed=True
     positions=np.zeros((12,3))
     positions[:4]=[(40.,0.,40.),(80.,0.,40.),(120.,0.,40.),(160.,0.,40.)]
     ahead=positions.copy();ahead[3]=(215.,0.,40.)
@@ -124,6 +149,8 @@ def test_backup_handoff_can_change_edges_while_primary_path_is_retained():
     for uid,u in sim.state.uavs.items():
         if uid>=4:
             u.state=UAVState.FAILED
+        else:
+            sim.flights[uid].armed=True
     positions=np.zeros((12,3))
     positions[:4]=[(40.,0.,40.),(80.,0.,40.),(120.,0.,40.),(160.,0.,40.)]
     exchanged=positions.copy();exchanged[[1,2]]=exchanged[[2,1]]
@@ -134,6 +161,20 @@ def test_backup_handoff_can_change_edges_while_primary_path_is_retained():
     assert sim._reachable_count(exchanged,positions)==sim._reachable_count(positions)
     disconnected=positions.copy();disconnected[:4,0]+=500.
     assert sim._reachable_count(disconnected,positions)<sim._reachable_count(positions)
+
+
+def test_returning_aircraft_may_release_backup_but_not_primary_path():
+    sim=ResilientUAVXSimulator(near_config(camera_mode='footprint'))
+    for uid,u in sim.state.uavs.items():
+        if uid>=4: u.state=UAVState.FAILED
+        else: sim.flights[uid].armed=True
+    positions=np.zeros((12,3))
+    positions[:4]=[(40.,0.,40.),(80.,0.,40.),(120.,0.,40.),(160.,0.,40.)]
+    ahead=positions.copy();ahead[3]=(215.,0.,40.)
+    sim.flights[3].returning=True
+    assert sim._reachable_count(ahead,positions)==sim._reachable_count(positions)
+    lost=ahead.copy();lost[3]=(250.,0.,40.)
+    assert sim._reachable_count(lost,positions)<sim._reachable_count(positions)
 
 
 def test_moving_scout_cannot_outrun_its_second_relay_path():
@@ -218,6 +259,37 @@ def test_charging_pad_cannot_charge_two_aircraft_in_one_interval():
     assert sim.flights[1].remaining_s>600.
 
 
+@pytest.mark.parametrize('failed_energy', [600.,1199.9])
+def test_permanently_failed_charger_never_revives_or_blocks_shared_service(failed_energy):
+    sim=ResilientUAVXSimulator(near_config(camera_mode='footprint',charging_pads=1,
+        faults=(FaultSpec('vehicle_failure',0.,0),)))
+    for uid in (0,1):
+        sim.flights[uid].charge_started_s=0.
+        sim.flights[uid].remaining_s=failed_energy if uid==0 else 600.
+        sim.flights[uid].sortie_s=300.
+        sim.state.uavs[uid].state=UAVState.CHARGING
+    sim._network()
+    for _ in range(3):
+        sim._move();sim.state.time+=sim.dt;sim._network()
+    assert sim.state.uavs[0].state==UAVState.FAILED
+    assert sim.flights[0].remaining_s==failed_energy
+    assert sim.flights[0].sortie_s==300.
+    assert sim.flights[1].remaining_s==pytest.approx(600.+3*sim.dt*1200/sim.recharge_s)
+    assert not any(e['type']=='recharge_completed' and e['uav_id']==0 for e in sim.events)
+
+
+@pytest.mark.parametrize('armed,landed,energy', [(True,False,600.),(False,False,600.),(False,True,float('nan'))])
+def test_charging_requires_grounded_disarmed_finite_energy(armed,landed,energy):
+    sim=ResilientUAVXSimulator(near_config(camera_mode='footprint',charging_pads=1))
+    flight=sim.flights[0]
+    flight.charge_started_s=0.
+    flight.remaining_s=energy
+    flight.armed,flight.landed=armed,landed
+    sim._move()
+    assert not any(e['type']=='recharge_completed' and e['uav_id']==0 for e in sim.events)
+    assert 0 not in sim._charge_admission
+
+
 @pytest.fixture(scope='module')
 def image_run(tmp_path_factory):
     folder=tmp_path_factory.mktemp('camera-mission')/'run'
@@ -267,14 +339,28 @@ def test_one_fragment_does_not_count_as_image_receipt():
         sim.close()
 
 
-def test_reobserve_after_camera_carrier_failure_preserves_original_deadline(tmp_path):
-    config=near_config(faults=(FaultSpec('vehicle_failure',57.5,3),))
-    sim=ResilientUAVXSimulator(config)
+def test_reobserve_after_camera_carrier_failure_preserves_original_deadline(tmp_path,monkeypatch):
+    sim=ResilientUAVXSimulator(near_config())
+    original_capture=sim._capture
+    first_capture={}
+    def capture_then_schedule_failure(task,uid):
+        result=original_capture(task,uid)
+        if not first_capture:
+            # Fail the actual carrier immediately after its first capture,
+            # before the next network service interval can deliver the image.
+            # This fixture stays meaningful when deployment speeds change.
+            first_capture.update(time_s=sim.state.time,uav_id=uid)
+            sim.scenario=replace(sim.scenario,faults=(
+                FaultSpec('vehicle_failure',sim.state.time,uid),))
+        return result
+    monkeypatch.setattr(sim,'_capture',capture_then_schedule_failure)
     report=sim.run(tmp_path/'recapture',600)
     assert report['pois_completed']==1
     assert report['sensing']['captures']==2
     assert report['sensing']['received_images']==1
-    assert report['tasks'][0]['detection_s']==57.5
+    assert report['tasks'][0]['detection_s']==first_capture['time_s']
+    assert report['faults'][0]['time_s']==first_capture['time_s']
+    assert report['faults'][0]['target']==first_capture['uav_id']
     assert report['reporting_deadline_misses']==[0]
     assert not report['checks']['all_uavs_landed']
     assert report['survivor_metrics']['all_survivors_landed']

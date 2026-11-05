@@ -10,10 +10,21 @@ See [requirements and assumptions](docs/UAVX_REQUIREMENTS.md),
 [changes and known issues](docs/UAVX_CHANGELOG.md), and
 [validation results](docs/UAVX_VALIDATION.md). Historical report/presentation
 claims do not override fresh logs.
+City/Unreal work is paused for storage. The core runs with the existing Python
+environment and needs no city asset download. Its total fleet is **30 UAVs,
+including spares**, with 30 nominal charging pads and 15 in the resource test.
+
 The [current failure register](docs/UAVX_FAILURES.md) separates observed fault-run
 failures, unqualified assumptions, submission gaps and errors already corrected.
 The [IIT Bombay action plan](docs/UAVX_NEXT_STEPS.md) prioritizes the remaining
 engineering work against the published evaluation criteria and submission gates.
+
+The final declared development matrix completed all 19 cases with unchanged
+source hashes and valid evidence: **17 passed, including all 12 nominal seeds**.
+Sole-radio outage and permanent aircraft loss retain their strict failures.
+The selected core suite passed **486 tests**. The live seed-42 GUI run completed
+at **1970 s with all 30 UAVs landed and all 14 checks passing**. See the
+[complete results and limits](docs/UAVX_VALIDATION.md).
 
 ## Open the live AeroMesh simulation
 
@@ -21,7 +32,7 @@ On Windows with Python 3.10 installed, double-click **`Start-AeroMesh.cmd`** in
 this repository. It prepares `.venv` if needed and opens **AeroMesh UAV-X | Live
 Swarm Simulation**. Each launch writes to a new `evidence/live-...` directory.
 
-The default window runs the scenario-driven 60-UAV development fleet: survey drones, protected relay chains,
+The default window runs the agreed scenario-driven **30-UAV fleet**: survey drones, protected relay chains,
 emerging PoIs, packet delivery, battery state and return/landing. It is a **2D
 view of the kinematic model**, plus GCS-received images rendered by a Panda3D scene camera. Flight dynamics remain kinematic. Fleet size, charging resources and radio assumptions are explicit in the scenario JSON.
 
@@ -104,6 +115,12 @@ requirements document for radio service, recharge, fleet-size, and geometry
 assumptions. Existing third-party code/assets retain their applicable terms;
 the original repository has no root LICENSE despite older MIT claims.
 
+The checked local package is `submission-artifacts/fleet30-core-20261106`:
+an eight-page report, 74.4 s demo and all-case evidence archive (about 21.1 MiB
+compressed). Its primary replay shows the link-outage run. See
+[verified package contents](docs/SUBMISSION_PACKAGE.md) for file names, checks
+and the remaining team/organizer dependencies.
+
 ## Prepare the report and demo
 
 Install the optional `requirements-artifacts.txt` dependencies and ffmpeg, then
@@ -115,6 +132,8 @@ python scripts/build_uavx_submission.py --runs evidence/run-42 evidence/outage-4
 
 This creates an eight-page technical draft, trajectory snapshot, and MP4 replay
 from recorded states. Generated files and full run logs remain local and ignored.
-The checked-in validation document records the exact benchmark results and source
-fingerprints. Team details and organizer scenario/log compliance need final review
-before any submission.
+Use a fresh folder and the complete finalized matrix; the previous local
+`fleet30-core-20261105` package is interim. The validation record identifies the
+measured results and matching source-snapshot boundary. Team details, official
+scenarios/logs, framework/resource acceptance and the submission route remain
+unconfirmed. The root-project license requires an owner decision.

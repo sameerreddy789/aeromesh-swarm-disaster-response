@@ -143,6 +143,23 @@ def test_landing_event_uses_supporting_observation_timestamp():
     assert landing['time_s']==landing['observed_at_s']==sim.dt
 
 
+def test_decimal_step_landing_starts_charging_on_next_model_interval():
+    sim=UAVXSimulator(fleet_size=1,dt=.1,tasks=[near_task()])
+    sim.state.time=2.2
+    flight=sim.flights[0]
+    flight.armed,flight.landed,flight.returning=True,False,True
+    flight.settled_s=2.
+    flight.remaining_s=1200.
+    sim._move()
+    sim.state.time=round(sim.state.time+sim.dt,9)
+    assert flight.landed and not flight.armed
+    assert flight.observed_at_s==flight.charge_started_s==sim.state.time==2.3
+    sim._move()
+    assert flight.charge_started_s is None
+    recharge=next(e for e in sim.events if e['type']=='recharge_completed')
+    assert recharge['time_s']==2.4
+
+
 @pytest.mark.parametrize('disturbance',['outage','failure'])
 def test_fault_injection_records_event_and_removes_radio(disturbance):
     sim=UAVXSimulator(fleet_size=2,tasks=[near_task()],disturbance=disturbance)

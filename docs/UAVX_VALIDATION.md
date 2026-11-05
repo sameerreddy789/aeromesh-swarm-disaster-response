@@ -1,170 +1,162 @@
-# UAV-X validation — 5 November 2026
+# UAV-X validation - 30-aircraft core
 
-Candidate update: 345 targeted tests passed in the clean environment. The latest
-movement/landing candidate is running its full matrix in
-`evidence/resilience-handoff-matrix-20261105`. Until that completes, the full
-matrix numbers below describe the previous source snapshot, not this candidate.
+The qualification target is **30 UAVs including spares**, with 30 charging pads
+in nominal cases and 15 in the resource-stress case. Mission checks retain the
+1000 x 1000 m task area, 2700 s deadline, 1200 s sortie, 100 m radio range,
+5 m/s speed, 100 m height, 20 m separation and 10 s reporting deadline.
+The planner uses a 22 m separation margin. Increasing the fleet or waiving a
+failed aircraft's landing is not a repair.
 
-The current release completed all **19 declared development cases**: **15 pass
-and four fail constraints**. Every case has zero verifier evidence errors, and
-the benchmark recorded unchanged source hashes from start to finish. The matrix
-is not an overall pass. The separate native GUI nominal mission passes all 14
-implemented checks. Results concern kinematic motion, rendered scene-camera
-images and bounded radio service under the [declared assumptions](UAVX_RESILIENCE.md).
-They do not establish hidden organizer-scenario compliance or physical flight.
+## Final core results
 
-## Environment and regression scope
+The frozen source completed all **19 declared development cases: 17 passed
+and 2 failed strict constraints**. All 12 nominal seeds, three link-outage
+cases, the 15-pad resource case and 10% packet-loss case passed. The complete
+radio-outage and permanent-aircraft-loss cases remain failures. The overall
+development matrix therefore remains failed; no universal compliance or
+organizer qualification is claimed.
 
-Validation used Windows 11 and Python 3.10.11. A fresh environment at
-`evidence/repro-environment` was installed using only `requirements-repro.txt`:
-NumPy 1.26.4, NetworkX 3.4.2, pytest 8.4.2, pygame 2.6.1, Panda3D 1.10.16 and
-Pillow 12.3.0. The isolated targeted suite passed **339 tests in 32.55 s**;
-raw output is `evidence/repro-tests.txt`. This is the listed targeted suite,
-not a claim that every historical or hardware/SITL test was run.
+All 19 cases finished and passed evidence consistency verification. Runtime
+source hashes were unchanged from start to finish. The portable
+[final matrix summary](verification/uavx/fleet30-core-final.json) contains every
+scenario, outcome, verifier result, source inventory and artifact hash. Full
+logs remain in `evidence/fleet30-core-final-01`; the exact runtime/test snapshot
+and run plan remain in `evidence/fleet30-core-final-01-source`.
 
-To reproduce in another fresh environment:
+The final selected core suite passed **486 tests in 64.89 s**. Dependency
+checking (`pip check`) passed. City/Unreal, SITL and the legacy dashboard are
+excluded as described below.
+
+| Case | Surveys/images | Landed | Completion | Downtime | Strict result |
+|---|---|---|---|---|---|
+| `nominal-seed42` | 10/10 | 30/30 | 1970 s | 0 s | Pass |
+| `nominal-seed7` | 10/10 | 30/30 | 2414.5 s | 0 s | Pass |
+| `nominal-seed100` | 10/10 | 30/30 | 2096 s | 0 s | Pass |
+| `nominal-seed101` | 10/10 | 30/30 | 2111 s | 0 s | Pass |
+| `nominal-seed102` | 10/10 | 30/30 | 2027 s | 0 s | Pass |
+| `nominal-seed103` | 10/10 | 30/30 | 2072.5 s | 0 s | Pass |
+| `nominal-seed104` | 10/10 | 30/30 | 2418 s | 0 s | Pass |
+| `nominal-seed105` | 10/10 | 30/30 | 2102 s | 0 s | Pass |
+| `nominal-seed106` | 10/10 | 30/30 | 1822.5 s | 0 s | Pass |
+| `nominal-seed107` | 10/10 | 30/30 | 2492 s | 0 s | Pass |
+| `nominal-seed108` | 10/10 | 30/30 | 2469.5 s | 0 s | Pass |
+| `nominal-seed109` | 10/10 | 30/30 | 2374 s | 0 s | Pass |
+| `link-outage-seed42` | 10/10 | 30/30 | 1970 s | 0 s | Pass |
+| `radio-outage-seed42` | 10/10 | 30/30 | 1966 s | 30 s | Fail: connectivity |
+| `permanent-failure-seed42` | 10/10 | 29/30 | Not achieved | 0 s | Fail: all-UAV landing/deadline |
+| `charging-pads15-seed42` | 10/10 | 30/30 | 2245.5 s | 0 s | Pass |
+| `early-link-seed42` | 10/10 | 30/30 | 1970 s | 0 s | Pass |
+| `late-link-seed42` | 10/10 | 30/30 | 1970 s | 0 s | Pass |
+| `packet-loss10pct-seed42` | 10/10 | 30/30 | 1970 s | 0 s | Pass |
+
+All cases collected and delivered images for all 10 PoIs. The radio-outage
+case completed survey/reporting and home landing at 1966 s, but its 30 s of
+endpoint downtime fails continuous connectivity. In the permanent-loss case,
+all 29 survivors landed at 1973.5 s; strict completion remains null and the run
+continues to the 2700 s cutoff because one failed UAV cannot land. Survivor
+completion does not replace strict all-UAV completion.
+
+Key runtime SHA-256 values are shown below; the linked summary retains the
+complete inventory.
+
+| File | SHA-256 |
+|---|---|
+| `simulation/resilient_uavx.py` | `c7edda669645edcb82d1e6d5df7445a79d0ec40e5a9c5475ff3915afc4baf7a5` |
+| `simulation/uavx.py` | `faf695035c6ab20c3b9035c8abdbba50d251b4b6951efcadfa696f877b9b63ae` |
+| `verify_submission.py` | `c6820fe003262df4c041bad86f9270a19f3f641c24f099a7de0273a378c196c7` |
+
+## Current live GUI verification
+
+The same frozen source completed `evidence/fleet30-core-live-final-01` at
+1970 s: 10/10 surveys and received images, all 30 UAVs landed, and all 14
+checks passing with no verifier errors. Its five core evidence files
+(`metrics.json`, `events.json`, `packets.json`, `connectivity.json`, and
+`trajectory.jsonl`) are byte-identical to final-matrix nominal seed 42.
+
+The GUI's saved `viewer/final.png` was visually inspected. Desktop capture
+could not initialize in this session, so the display check used that saved
+surface and telemetry; this is not a claim of a new independent desktop capture.
+The [GUI guide](UAVX_GUI.md) preserves earlier baseline measurements separately.
+The GUI case shares the final matrix source; its result does not override the
+two strict fault failures.
+
+## Report, replay and archive verification
+
+The local `submission-artifacts/fleet30-core-20261106` artifacts were generated
+from all 19 final runs, with the passing link-outage case as the primary demo.
+The eight-page A4 report was rendered and visually checked; extracted text
+contains all 19 cases with 17 PASS and 2 FAIL labels. The 74.4 s, 1280 x 720,
+15 fps replay was checked during the active fault at simulation time 910 s.
+
+`validation-results.json` retains all 19 verifier outcomes. The 692-file
+`evidence.zip` passed CRC checking and compresses 520,062,396 bytes of evidence
+to 22,097,843 bytes. It includes the source snapshot/run plan and the verified
+GUI evidence/final surface. See [package contents](SUBMISSION_PACKAGE.md).
+These artifacts preserve the strict failures and do not establish organizer
+qualification or physical flight.
+
+## Preserved attempts
+
+Every failed attempt remains in local evidence. Results belong to the source
+snapshot that produced them; later changes do not inherit an earlier pass.
+
+| Local evidence set | Scope | Outcome |
+|---|---|---|
+| `fleet30-withdrawal-formal-01` | Nominal 42, 100, 109 | Seeds 42/109 incomplete; seed 100 passed |
+| `fleet30-withdrawal-formal-02` | Nominal 42, 100, 109 | 10/10, 7/10, 5/10 tasks respectively |
+| `fleet30-withdrawal-formal-03` | Nominal 42, 100, 109 | All passed at 2046, 2100, 2370 s; superseded by canonical-order repair |
+| `fleet30-canonical-matrix-01` | Full 19 cases | 16 passed; seed 108 completed 9/10; strict radio/permanent-loss cases failed |
+| `fleet30-admission-seed108-01` / `-02` | Seed 108 admission experiments | Both failed; 9/10 tasks |
+| `fleet30-admission-seed108-03` | Seed 108 with revised idle energy policy | Passed; 10/10 at 2469.5 s |
+| `fleet30-admission-matrix-02` | Full 19 cases | 14 passed; nominal 7/105/107 regressed; strict radio/permanent-loss cases failed |
+| `fleet30-readiness-subset-01` | Nominal 7, 105, 107, 108 | First three passed; seed 108 failed |
+| `fleet30-readiness-subset-02` | Same four nominal seeds | All passed; superseded by cache and charging/hold corrections |
+| `fleet30-charge-safety-subset-01` | Nominal 7, 105, 107, 108 | All passed; superseded by fractional-timestep timestamp normalization |
+
+The canonical complete-radio-outage case surveyed all 10 PoIs and landed all
+30 UAVs at 1999.5 s, while retaining its 30 s connectivity failure. The
+permanent-loss case surveyed all 10 PoIs and landed all 29 survivors at
+2024.5 s; strict all-UAV landing and mission completion failed. These outcomes
+explain the fault model and are not universal compliance claims.
+
+## Reproduce the core
+
+Use the existing environment to avoid another installation. Every run needs a
+fresh output directory so old evidence is preserved.
 
 ```powershell
-py -3.10 -m venv evidence/repro-clean
-evidence\repro-clean\Scripts\python.exe -m pip install -r requirements-repro.txt
-evidence\repro-clean\Scripts\python.exe -m pytest tests/test_resilient_uavx.py tests/test_resilient_verifier.py tests/test_uavx_scenarios.py tests/test_camera_sensor.py tests/test_radio_service.py tests/test_uavx_gui.py tests/test_mission_safety.py tests/test_uavx_profile.py tests/test_packet_evidence.py tests/test_evidence_metrics.py tests/test_submission_verifier.py tests/test_comm.py tests/test_route_recovery.py tests/test_interference.py tests/test_simulation.py -q --disable-warnings
+.venv\Scripts\python.exe run_simulation.py --scenario-file scenarios/uavx/nominal.json --output evidence/new-nominal
+.venv\Scripts\python.exe verify_submission.py evidence/new-nominal
+.venv\Scripts\python.exe scripts/benchmark_uavx.py --workers 3 --output evidence/new-matrix
 ```
 
-The suite covers scenario validation, bounded service/queue overflow,
-source/packet/image provenance, fragment reassembly, fault scheduling, recapture
-timing, charging-slot admission, mission safety and original-profile regressions.
-GUI unit tests use the SDL dummy driver; the full GUI run below opened the native
-AeroMesh window separately. No aircraft, PX4 SITL or ProjectAirSim client supplies
-these results.
+The default matrix has 12 nominal seeds (42, 7, 100-109), link outages at 180,
+900 and 1600 s, a 30 s complete radio outage, permanent aircraft loss, 15
+charging pads, and 10% packet loss. It retains constraint failures and crashes.
+Exit 0 means all implemented checks passed; exit 2 means completed, consistent
+cases failed constraints; exit 1 means process, evidence or source-stability
+failure. None establishes submission readiness.
 
-## Complete development matrix
-
-Full local matrix evidence is saved at:
-
-`evidence/resilience-matrix-20261105/summary.json`
-
-Each case has its saved input under `scenarios/`, process log and verification
-result under its named case directory, and full artifacts under `<case>/run/`.
-All 19 cases finished and verified. Summary fields are `source_stable=true`,
-`source_changed=[]`, `infrastructure_ok=true` and `development_matrix_passed=false`.
-
-The default scenario declares 60 UAVs, 60 charging pads, 720 s full recharge,
-25 m pad spacing, 44 m protected relay slots, 128 x 128 rendered PNGs,
-131072 bytes/s shared half-duplex service per node and 1048576 queued bytes per
-node. It uses a 0.5 s step, 100 m 3D radio cutoff and 2% independent per-attempt
-loss. The resource case reduces both fleet and pads to 30; the higher-loss case
-changes per-attempt loss to 10%. Sample flight, range, separation, reporting and
-mission limits remain unchanged.
-
-| Case | PoIs / images received | Completion (s) | PDR (%) | Connectivity (%) | Maximum received-image delay (s) | Result |
-|---|---:|---:|---:|---:|---:|---|
-| nominal-seed42 | 10/10 | 2005.0 | 99.9960 | 100.0000 | 6.5 | Pass |
-| nominal-seed7 | 10/10 | 2278.5 | 99.9859 | 100.0000 | 9.0 | Pass |
-| nominal-seed100 | 10/10 | 2462.5 | 99.9983 | 100.0000 | 7.0 | Pass |
-| nominal-seed101 | 10/10 | 2161.0 | 99.9961 | 100.0000 | 9.0 | Pass |
-| nominal-seed102 | 10/10 | 1987.5 | 99.9812 | 100.0000 | 5.5 | Pass |
-| nominal-seed103 | 10/10 | 2019.0 | 99.9868 | 100.0000 | 7.5 | Pass |
-| nominal-seed104 | 10/10 | 1839.0 | 99.9736 | 100.0000 | 8.5 | Pass |
-| nominal-seed105 | 10/10 | 2372.0 | 99.9805 | 100.0000 | 8.0 | Pass |
-| nominal-seed106 | 10/10 | 1904.5 | 100.0000 | 100.0000 | 7.5 | Pass |
-| nominal-seed107 | 10/10 | 2336.0 | 99.9909 | 100.0000 | 7.5 | Pass |
-| nominal-seed108 | 10/10 | 2387.5 | 100.0000 | 100.0000 | 6.5 | Pass |
-| nominal-seed109 | 10/10 | 2597.0 | 99.9713 | 100.0000 | 8.0 | Pass |
-| link-outage-seed42, t=900 s | 10/10 | 2005.0 | 99.9960 | 100.0000 | 6.5 | Pass |
-| radio-outage-seed42, t=900 s | 10/10 | 2007.0 | 99.9364 | 98.5041 | 6.5 | Connectivity fails |
-| permanent-failure-seed42, t=900 s | 10/10 | Incomplete at 2700 | 99.9919 | 100.0000 | 6.5 | All-UAV landing and deadline fail |
-| resource30-seed42 | 7/10 | Incomplete at 2700 | 96.8466 | 85.5392 | 6.0 | Survey/report completion, deadline, connectivity, reporting and imagery checks fail |
-| early-link-seed42, t=180 s | 10/10 | 2005.0 | 99.9960 | 100.0000 | 7.0 | Pass |
-| late-link-seed42, t=1600 s | 10/10 | 1979.5 | 99.7888 | 98.2609 | 23.5 | Connectivity and reporting deadline fail |
-| packet-loss10pct-seed42 | 10/10 | 2005.0 | 99.9960 | 100.0000 | 7.5 | Pass |
-
-The delay column includes received images only. In resource30, three PoIs have
-no detection/report, so a 6.0 s maximum among seven received images does not
-establish reporting compliance. A numerical completion time records survey/image
-delivery and landing; it does not override failed communication/reporting checks.
-
-Across all 19 cases, battery exhaustions, collision pairs, separation violations,
-geofence violations and queue-overflow drops are zero. Aggregate minimum
-separation is **22.000023716 m**, maximum altitude **99.965243520 m**, and longest
-sortie **1123.0 s**. Maximum measured speed is 5 m/s within floating-point error
-(at most 2.17e-13 m/s above 5); the existing 1e-8 tolerance is unchanged.
-Zero queue overflow in this workload does not establish performance under
-arbitrary congestion; targeted tests exercise that behavior separately.
-
-## Interpret the negative cases
-
-| Case | Downtime (s) | Fresh affected-source service after injection (s) | Additional evidence |
-|---|---:|---:|---|
-| Link outage at 180 s | 0 | 6.5 | The selected link is disabled for 30 s; alternate service maintains strict connectivity. |
-| Link outage at 900 s | 0 | 6.0 | The selected link is disabled for 30 s; all 14 checks pass. |
-| Radio outage at 900 s | 30.0 | 6.5 | UAV 36's sole radio is unavailable until 930 s. Other-source service does not restore that endpoint. |
-| Permanent failure at 900 s | 0 | 6.5 | The failed UAV stays an obstacle. The 59 operational survivors finish survey and return by 1992.5 s; strict all-UAV completion is absent. |
-| Link outage at 1600 s | 34.399303 | 37.5 | PoI 9 detection at 1615.0 s completes image receipt at 1638.5 s, missing the 10 s deadline. |
-
-Connectivity includes operational airborne UAVs. A permanently failed UAV is
-excluded from that network denominator but remains in the strict landing test.
-The radio-disabled aircraft is still operational and airborne, so its outage
-is included. Grounded-only intervals do not inflate mission availability.
-Service recovery requires fresh post-fault receipts from every recorded affected
-surviving source. It does not assert that all radios recovered.
-
-The late-link case demonstrates that the moving network is not protected at
-every transition. The resource30 case demonstrates dependence on the declared
-larger resources. Both remain failures in the [failure register](UAVX_FAILURES.md).
-
-## Reproduce missions and verification
-
-Use a new output path for each invocation:
+The selected core test command is:
 
 ```powershell
-.venv\Scripts\python.exe scripts/benchmark_uavx.py --output evidence/new-resilience-matrix --workers 2
-.venv\Scripts\python.exe run_simulation.py --scenario-file scenarios/uavx/nominal.json --gui --output evidence/new-resilience-gui --auto-close --require-pass
-.venv\Scripts\python.exe verify_submission.py evidence/new-resilience-gui
+.venv\Scripts\python.exe -m pytest tests -q --ignore-glob=tests/test_unreal_*.py --ignore=tests/test_aeromesh_bridge.py --ignore=tests/test_city_streaming.py --ignore=tests/test_valdrada_degenerate_far.py --ignore=tests/test_integration_sitl.py --ignore=tests/test_dashboard.py
 ```
 
-The matrix defaults to all 19 cases. `--quick` runs only four named cases and
-must not be presented as the complete matrix. `--seeds` changes the nominal seed
-list; saved input files identify precisely what was tested. The benchmark returns
-2 for consistent constraint failures, 1 for process/evidence/source errors and
-0 only when every declared case passes. The current four failures prevent exit 0.
+Paused city/Unreal tests and opt-in SITL are excluded. Legacy dashboard tests
+are excluded because Flask is absent in this environment. This command does
+not qualify those components or connect to hardware.
 
-Separately verified native GUI evidence is `evidence/resilience-gui-qualified`.
-It finished at **2005.0 simulated seconds**, surveyed and received all 10 PoI
-images, and passed all 14 checks, including all-UAV landing. Its verifier reports
-`evidence_errors=[]`, `failed_constraints=[]`, `sample_run_passed=true` and
-`submission_ready=false`. Saved `viewer/` images show the live AeroMesh state;
-the displayed camera image is a completed GCS receipt, not an onboard bypass.
+## Evidence boundary
 
-## Evidence inventory and integrity
+Core motion is kinematic. Panda3D renders synthetic scene images; actual PNG
+bytes pass through a bounded per-node radio model to the GCS. Verifiers check
+artifact completeness, byte delivery, timestamps, capacity ledgers, geometric
+constraints and landing consistency. They do not establish calibrated RF,
+airframe dynamics, battery behavior or survivor-recognition accuracy.
 
-Schema 2 records the original five artifacts (`metrics.json`, `events.json`,
-`packets.json`, `connectivity.json`, `trajectory.jsonl`) plus `scenario.json`,
-`radio-service.json`, `sensing/observations.json`, capture PNGs and received PNGs.
-The manifest hashes these files and records actual runtime source bytes.
-Capture metadata includes source UAV, acquisition time, pose/intrinsics, scene
-fingerprint and image hash. Complete image receipt is reconstructed from delivered
-fragments; a first fragment alone cannot establish reporting success.
-
-The verifier checks source/artifact inventories, packet provenance, assembled
-image bytes, per-node capacity and supporting survey/receipt/landing times.
-It detects missing or inconsistent evidence. It is not a digital signature,
-independent reconstruction of all dynamics, or protection against coordinated
-edits to artifacts and hashes. Exact source bytes, including line endings, must
-match; use each delivery's source snapshot for its saved runs.
-
-## Preserved historical baselines and submission boundary
-
-The earlier 30-UAV, footprint-only release remains in
-[gui-benchmark-summary.json](verification/uavx/gui-benchmark-summary.json), and
-the partition-recovery baseline in
-[benchmark-summary.json](verification/uavx/benchmark-summary.json). Its 172-test
-result, 1906.0 s nominal seed-42 result, earlier eight-page proposal and trajectory
-demo describe that older version. They are not the current 60-UAV image-delivery
-release's evidence. Prior source snapshots and delivery updates remain intact.
-
-Current report/video packaging must identify these 19 outcomes and sources.
-Team/qualification information, official scenarios/log schema, allowable
-resources, simulator acceptance, failed-aircraft scoring, license and final
-submission review remain open. Physical drones, a particular 3D engine,
-decentralized planning and learned survivor recognition are not being added as
-unsupported mandatory requirements. No entry has been emailed or submitted.
+Unreal/city work is paused for storage and excluded from the core results.
+Team identity/qualification, official advanced scenarios and log format,
+resource/framework acceptance, root licensing and submission route remain
+unconfirmed. Earlier records are retained in the
+[pre-30-fleet validation archive](history/UAVX_VALIDATION_PRE_FLEET30.md).
