@@ -555,14 +555,20 @@ class UAVXSimulator:
                     reporting_deadline_misses=late,tasks=[asdict(p) for p in self.tasks],
                     checks=checks,sample_constraints_passed=all(checks.values()))
 
-    def run(self, output, max_time=2700):
+    def run(self, output, max_time=2700, observer=None):
         if not math.isfinite(max_time) or not 0<max_time<=2700:
             raise ValueError('max_time must be positive and no greater than 2700')
         output=Path(output);output.mkdir(parents=True,exist_ok=False)
+        if observer is not None:
+            observer.start(self, output)
         next_sample=0.
         with (output/'trajectory.jsonl').open('w',encoding='utf-8') as stream:
             while self.state.time+self.dt<=max_time+1e-8 and self.completion_s is None:
+                if observer is not None and not observer.before_step(self):
+                    break
                 self.step()
+                if observer is not None:
+                    observer.after_step(self)
                 if self.state.time>=next_sample:
                     stream.write(json.dumps(dict(time_s=self.state.time,
                         uavs=[dict(id=i,position=u.position.to_array().tolist(),role=u.role.value,
@@ -579,4 +585,7 @@ class UAVXSimulator:
                       networkx=nx.__version__,source_sha256=self.source_sha256,
                       output_sha256={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(output.iterdir()) if p.is_file()})
         (output/'manifest.json').write_text(json.dumps(manifest,indent=2),encoding='utf-8')
-        return self.report()
+        report=self.report()
+        if observer is not None:
+            observer.finish(self, report)
+        return report

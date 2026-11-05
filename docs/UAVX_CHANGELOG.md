@@ -6,6 +6,11 @@ checkouts were preserved; implementation lives in a separate AeroMesh-UAVX clone
 
 ## Implemented
 
+- Added `Start-AeroMesh.cmd`, isolated GUI dependencies and a live desktop view
+  wired directly to the updated UAV-X engine. The observer displays current UAV
+  positions, actual topology edges and packet/landing state; pause and speed
+  controls affect pacing only. New runs preserve previous evidence. Five GUI
+  regressions and a full visible mission verify this path; see [GUI notes](UAVX_GUI.md).
 - Restored simulation-only CLI; new UAV-X profile is the default, old benchmarks
   remain explicit `--profile legacy`. Hardware-oriented old CLI preserved separately.
 - Added sample constraints, energy admission, per-sortie accounting, own-pad
@@ -22,7 +27,7 @@ checkouts were preserved; implementation lives in a separate AeroMesh-UAVX clone
   construction timing presented as inference. Added explicit synthetic sensor scope.
 - Added isolated dependencies, adversarial tests and current documentation.
 - The old optional SITL test is explicitly opt-in; normal validation never connects
-  to or arms an aircraft. No physical simulator was launched for this change.
+  to or arms an aircraft. AeroMesh's live GUI uses the kinematic engine.
 
 ## Errors uncovered / corrected during implementation
 

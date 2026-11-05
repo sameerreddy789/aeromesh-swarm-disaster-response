@@ -15,7 +15,30 @@ failures, unqualified assumptions, submission gaps and errors already corrected.
 The [IIT Bombay action plan](docs/UAVX_NEXT_STEPS.md) prioritizes the remaining
 engineering work against the published evaluation criteria and submission gates.
 
-## Reproduce on Windows / Python 3.10
+## Open the live AeroMesh simulation
+
+On Windows with Python 3.10 installed, double-click **`Start-AeroMesh.cmd`** in
+this repository. It prepares `.venv` if needed and opens **AeroMesh UAV-X | Live
+Swarm Simulation**. Each launch writes to a new `evidence/live-...` directory.
+
+The window runs the updated 30-UAV engine live: survey drones, relay chains,
+emerging PoIs, packet delivery, battery state and return/landing. It is a **2D
+view of the kinematic model**, with no integrated 3D physics backend.
+
+For an explicit launch at 4x wall-clock playback:
+
+```powershell
+.venv\Scripts\python.exe -m pip install -r requirements-gui.txt
+.venv\Scripts\python.exe run_simulation.py --profile uavx --gui --playback-speed 4 --seed 42 --output evidence/my-live-run
+```
+
+Use **Space** to pause, **+ / -** for speed, **L** for radio links, **T** for trails,
+the mouse wheel to zoom, right-drag to pan, **Home** to fit, and click a drone to
+inspect it. **R** starts a fresh run after completion; **Esc** closes. Playback
+speed changes wall-clock pacing only. The window stays open at mission end.
+See [live GUI validation and evidence](docs/UAVX_GUI.md).
+
+## Reproduce headless on Windows / Python 3.10
 
 ```powershell
 python -m venv .venv

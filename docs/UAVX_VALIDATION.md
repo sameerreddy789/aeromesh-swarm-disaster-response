@@ -8,8 +8,10 @@ not hidden organizer scenarios, RF hardware, onboard perception or physical flig
 ## Environment and scope
 
 - Windows 11, Python 3.10.11; isolated `.venv`.
-- NumPy 1.26.4, NetworkX 3.4.2, pytest 8.4.2 (`requirements-uavx.txt`).
-- `pip check` passed. No aircraft, PX4 SITL or ProjectAirSim client was connected.
+- NumPy 1.26.4, NetworkX 3.4.2, pytest 8.4.2 (`requirements-uavx.txt`);
+  optional desktop GUI uses pygame 2.6.1 (`requirements-gui.txt`).
+- `pip check` passed. These AeroMesh runs use no aircraft, PX4 SITL or
+  ProjectAirSim client.
 - Separate clone: `AeroMesh-UAVX`, branch `codex/uavx-submission`, based on
   `0ba914d79dc8223866c3333956c31251f5c5f661`.
 - The original downloaded AeroMesh checkout and DroneOS/Garuda checkout were
@@ -20,10 +22,12 @@ not hidden organizer scenarios, RF hardware, onboard perception or physical flig
 
 ```powershell
 .venv\Scripts\python.exe -m pip check
-.venv\Scripts\python.exe -m pytest tests/test_mission_safety.py tests/test_uavx_profile.py tests/test_packet_evidence.py tests/test_evidence_metrics.py tests/test_submission_verifier.py tests/test_comm.py tests/test_route_recovery.py tests/test_interference.py tests/test_simulation.py -q --disable-warnings
+.venv\Scripts\python.exe -m pytest tests/test_uavx_gui.py tests/test_mission_safety.py tests/test_uavx_profile.py tests/test_packet_evidence.py tests/test_evidence_metrics.py tests/test_submission_verifier.py tests/test_comm.py tests/test_route_recovery.py tests/test_interference.py tests/test_simulation.py -q --disable-warnings
 ```
 
-Final result: **167 passed in 10.68 s**, including 29 verifier regressions and three GCS-partition regressions.
+Final result: **172 passed in 17.88 s**, including five live-GUI regressions,
+29 verifier regressions and three GCS-partition regressions. The GUI tests use
+SDL's dummy driver; the separate full GUI mission below opened a native window.
 Coverage includes unreachable traffic, duplicate logical packet IDs, edge-count
 hop limits, one-hop-per-tick forwarding, stale landing observations, crossing
 paths, future tasks, priority changes, removed relay slots, returning replacements,
@@ -37,14 +41,14 @@ per-attempt packet loss. Other limits follow the supplied sample slide. The
 disturbance is injected at t=900 s. Output folders must be new.
 
 ```powershell
-.venv\Scripts\python.exe run_simulation.py --profile uavx --seed 42 --output evidence/partition-fix-nominal-42
-.venv\Scripts\python.exe run_simulation.py --profile uavx --seed 7 --output evidence/partition-fix-nominal-7
-.venv\Scripts\python.exe run_simulation.py --profile uavx --seed 42 --disturbance outage --output evidence/partition-fix-outage-42
-.venv\Scripts\python.exe run_simulation.py --profile uavx --seed 42 --disturbance failure --output evidence/partition-fix-failure-42
-.venv\Scripts\python.exe verify_submission.py evidence/partition-fix-nominal-42
-.venv\Scripts\python.exe verify_submission.py evidence/partition-fix-nominal-7
-.venv\Scripts\python.exe verify_submission.py evidence/partition-fix-outage-42
-.venv\Scripts\python.exe verify_submission.py evidence/partition-fix-failure-42
+.venv\Scripts\python.exe run_simulation.py --profile uavx --gui --playback-speed 24 --seed 42 --output evidence/gui-validation-42 --auto-close --require-pass
+.venv\Scripts\python.exe run_simulation.py --profile uavx --seed 7 --output evidence/gui-release-nominal-7
+.venv\Scripts\python.exe run_simulation.py --profile uavx --seed 42 --disturbance outage --output evidence/gui-release-outage-42
+.venv\Scripts\python.exe run_simulation.py --profile uavx --seed 42 --disturbance failure --output evidence/gui-release-failure-42
+.venv\Scripts\python.exe verify_submission.py evidence/gui-validation-42
+.venv\Scripts\python.exe verify_submission.py evidence/gui-release-nominal-7
+.venv\Scripts\python.exe verify_submission.py evidence/gui-release-outage-42
+.venv\Scripts\python.exe verify_submission.py evidence/gui-release-failure-42
 ```
 
 The runner exits 0 when evidence is written; add `--require-pass` to return 2 on
@@ -104,9 +108,11 @@ different line endings can have different source hashes without a logic change.
 The verifier requires matching runtime source bytes; use the source snapshot in
 the local draft package when verifying these exact precomputed runs.
 
-[benchmark-summary.json](verification/uavx/benchmark-summary.json) retains metrics,
-manifests and final verification results for review. It is deliberately a compact
-summary, not a complete log folder; regenerate the runs or use the local draft
+[gui-benchmark-summary.json](verification/uavx/gui-benchmark-summary.json) retains
+the current metrics, manifests and verification results for review. The earlier
+[benchmark-summary.json](verification/uavx/benchmark-summary.json) is preserved
+for the partition-recovery version, whose runtime source hashes differ. These are compact
+summaries, not complete log folders; regenerate the runs or use the local draft
 package for the full data. Full logs, old failed development runs, the virtual
 environment and generated PDF/video are ignored by Git.
 
@@ -121,11 +127,11 @@ against coordinated edits to both artifacts and their hashes.
 The optional authoring environment uses `requirements-artifacts.txt` and ffmpeg:
 
 ```powershell
-python scripts/build_uavx_submission.py --runs evidence/partition-fix-nominal-42 evidence/partition-fix-nominal-7 evidence/partition-fix-outage-42 evidence/partition-fix-failure-42 --output submission-artifacts/uavx-2026-11-05
+python scripts/build_uavx_submission.py --runs evidence/gui-validation-42 evidence/gui-release-nominal-7 evidence/gui-release-outage-42 evidence/gui-release-failure-42 --output submission-artifacts/uavx-gui-2026-11-05
 ```
 
 The preserved baseline report is an eight-page draft following the supplied template concepts.
-Its numerical results also match the partition-fix reruns; source hashes are retained
+Its numerical results also match the current GUI-release runs; source hashes are retained
 separately for each version.
 All eight rendered pages were visually checked. The H.264 demo is 1280 x 720,
 15 fps, 954 frames and 63.6 s; a complete ffmpeg decode reported no errors.

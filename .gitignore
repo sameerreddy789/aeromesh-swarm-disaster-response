@@ -27,3 +27,4 @@ venv/
 # Locally generated simulation evidence and submission archives
 evidence/
 submission-artifacts/
+projectairsim_client.log

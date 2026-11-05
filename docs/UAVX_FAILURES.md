@@ -86,6 +86,11 @@ The verifier now rejects incomplete artifact manifests and contradictory claims.
 These corrected errors are not listed as outstanding failures.
 
 Follow-up: recovery now detects disconnected groups that retain local neighbors
-but have no GCS path. The targeted suite passes 167 tests, and four full reruns
+but have no GCS path. With the live GUI added, the targeted suite passes 172 tests,
+and four current full runs
 retain the results above. This corrects a detection gap; it does not restore a
 disabled sole radio or land a permanently failed aircraft.
+
+The live AeroMesh desktop window now runs this profile and has completed a full
+nominal mission. It resolves the missing live visualization, while the physics,
+radio, perception and fault-model limits above remain. See [GUI notes](UAVX_GUI.md).

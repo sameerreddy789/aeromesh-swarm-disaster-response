@@ -60,6 +60,10 @@ def run(scenario, seed, max_time, output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--require-pass", action="store_true", help="Exit 2 when a UAV-X constraint check fails")
+    parser.add_argument("--gui", action="store_true", help="Open the live AeroMesh UAV-X desktop simulation")
+    parser.add_argument("--playback-speed", type=float, default=12., help="GUI wall-clock pacing; does not change flight limits")
+    parser.add_argument("--repeat", action="store_true", help="Repeat GUI missions in separate numbered evidence folders")
+    parser.add_argument("--auto-close", action="store_true", help="Close GUI after this run, useful for verification")
     parser.add_argument("--profile", choices=["uavx", "legacy"], default="uavx")
     parser.add_argument("--fleet-size", type=int, default=30)
     parser.add_argument("--packet-loss", type=float, default=0.02)
@@ -70,6 +74,12 @@ def main():
     parser.add_argument("--max-time", type=float, default=None)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
+    if (args.gui and args.profile != 'uavx') or ((args.repeat or args.auto_close) and not args.gui):
+        parser.error('--gui/--repeat/--auto-close require the UAV-X GUI profile')
+    if args.repeat and args.auto_close:
+        parser.error('--repeat and --auto-close are mutually exclusive')
+    if not np.isfinite(args.playback_speed) or not .25 <= args.playback_speed <= 100:
+        parser.error('--playback-speed must be finite and between 0.25 and 100')
     args.max_time = args.max_time if args.max_time is not None else (2700 if args.profile == "uavx" else 600)
     if not np.isfinite(args.max_time) or args.max_time <= 0:
         parser.error("--max-time must be positive and finite")
@@ -77,6 +87,29 @@ def main():
         if args.benchmark_all:
             parser.error("--benchmark-all applies to --profile legacy")
         from simulation.uavx import UAVXSimulator
+        if args.gui:
+            try:
+                from visualization.uavx_gui import UAVXVisualizer
+            except ImportError as exc:
+                parser.error(f'GUI dependency unavailable: {exc}. Install requirements-gui.txt')
+            viewer=UAVXVisualizer(speed=args.playback_speed)
+            iteration=1
+            try:
+                while True:
+                    folder=args.output if iteration==1 else args.output.with_name(f'{args.output.name}-{iteration:03d}')
+                    sim=UAVXSimulator(seed=args.seed,fleet_size=args.fleet_size,
+                                      packet_loss=args.packet_loss,disturbance=args.disturbance)
+                    report=sim.run(folder,args.max_time,observer=viewer)
+                    print(json.dumps({'output':str(folder),'completion_time_s':report['completion_time_s'],
+                                      'checks':report['checks']},indent=2),flush=True)
+                    if not viewer.wait_at_end(repeat=args.repeat,auto_close=args.auto_close):
+                        break
+                    iteration+=1
+            finally:
+                viewer.close()
+            if args.require_pass and not report['sample_constraints_passed']:
+                raise SystemExit(2)
+            return
         try:
             sim = UAVXSimulator(seed=args.seed, fleet_size=args.fleet_size,
                                 packet_loss=args.packet_loss, disturbance=args.disturbance)
