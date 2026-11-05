@@ -222,6 +222,9 @@ class UAVXSimulator:
                 self._return(uid,'handoff_replanned')
             self.replacements.clear()
             self.event('task_selected', poi_id=task.id, priority=task.priority, required_slots=count)
+        # A partition can retain local neighbors while losing every GCS path.
+        graph = self.router.network_graph
+        gcs_connected = nx.node_connected_component(graph, -1) if -1 in graph else set()
         # First retain safe current owners; release or replace low-energy relays.
         for slot,uid in list(self.slot_owners.items()):
             f,u = self.flights[uid],self.state.uavs[uid]
@@ -229,8 +232,8 @@ class UAVXSimulator:
             if not u.is_operational() or f.returning:
                 self._release_slot(uid)
                 continue
-            radio_lost = uid not in self.router.network_graph or self.router.network_graph.degree(uid) == 0
-            if f.remaining_s < return_time + 360 or radio_lost:
+            gcs_path_lost = uid not in gcs_connected
+            if f.remaining_s < return_time + 360 or gcs_path_lost:
                 if slot not in self.replacements:
                     candidates = [i for i in self.flights if self.flights[i].slot is None
                                   and self._eligible(i, self.slots[slot])]
@@ -239,7 +242,8 @@ class UAVXSimulator:
                         self.replacements[slot] = new
                         self.flights[new].slot = slot
                         self.state.uavs[new].target_position = Vector3D(*self.slots[slot][:2],65.)
-                        self.event('replacement_dispatched', old_uav_id=uid, new_uav_id=new, slot=slot)
+                        self.event('replacement_dispatched', old_uav_id=uid, new_uav_id=new, slot=slot,
+                                   reason='gcs_path_lost' if gcs_path_lost else 'low_energy')
                 new = self.replacements.get(slot)
                 if new is not None and self.state.uavs[new].is_operational() and self.flights[new].armed and not self.flights[new].returning and self.flights[new].slot == slot and self.state.uavs[new].distance_to(Vector3D(*self.slots[slot][:2],65.)) <= 3 and self.state.uavs[new].connected_to_gcs:
                     self._return(uid, 'measured_relay_handoff')

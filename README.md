@@ -12,6 +12,8 @@ See [requirements and assumptions](docs/UAVX_REQUIREMENTS.md),
 claims do not override fresh logs.
 The [current failure register](docs/UAVX_FAILURES.md) separates observed fault-run
 failures, unqualified assumptions, submission gaps and errors already corrected.
+The [IIT Bombay action plan](docs/UAVX_NEXT_STEPS.md) prioritizes the remaining
+engineering work against the published evaluation criteria and submission gates.
 
 ## Reproduce on Windows / Python 3.10
 

@@ -196,6 +196,44 @@ def test_radio_loss_dispatches_replacement_without_waiting_for_low_battery():
     assert any(e['type']=='replacement_dispatched' and e['old_uav_id']==uid for e in sim.events)
 
 
+def test_partition_with_neighbors_dispatches_replacement_from_actual_gcs_path():
+    sim=UAVXSimulator(fleet_size=5,tasks=[near_task()])
+    sim._network();sim._plan()
+    uid=sim.slot_owners[0]
+    partition={uid,sim.slot_owners[1]}
+    graph=sim.router.network_graph
+    graph.remove_edges_from([(a,b) for a,b in graph.edges if (a in partition)!=(b in partition)])
+    assert graph.degree(uid)>0
+    assert sim.state.uavs[uid].connected_to_gcs  # Cached flag predates the partition.
+    assert sim.flights[uid].remaining_s==1200
+    sim._plan()
+    assert any(e['type']=='replacement_dispatched' and e['old_uav_id']==uid
+               and e['reason']=='gcs_path_lost' for e in sim.events)
+
+
+def test_healthy_multihop_path_does_not_dispatch_unnecessary_replacement():
+    sim=UAVXSimulator(fleet_size=5,tasks=[near_task()])
+    sim._network();sim._plan()
+    graph=sim.router.network_graph
+    graph.remove_edges_from(list(graph.edges))
+    graph.add_edges_from([(-1,0),(0,1),(1,2),(2,3),(3,4)])
+    for u in sim.state.uavs.values():
+        u.connected_to_gcs=False  # Recovery decisions must use the actual graph.
+    sim._plan()
+    assert not sim.replacements
+    assert not any(e['type']=='replacement_dispatched' for e in sim.events)
+
+
+def test_missing_gcs_node_is_guarded_and_dispatches_path_recovery():
+    sim=UAVXSimulator(fleet_size=5,tasks=[near_task()])
+    sim._network();sim._plan()
+    sim.router.network_graph.remove_node(-1)
+    assert all(sim.router.network_graph.degree(uid)>0 for uid in sim.slot_owners.values())
+    sim._plan()
+    dispatched=[e for e in sim.events if e['type']=='replacement_dispatched']
+    assert dispatched and all(e['reason']=='gcs_path_lost' for e in dispatched)
+
+
 def test_motion_veto_enforces_speed_even_with_invalid_slot_ratio():
     sim=UAVXSimulator(fleet_size=2,tasks=[near_task()])
     sim.slots={0:(60,0,40),1:(120,0,40),2:(175,0,40)}

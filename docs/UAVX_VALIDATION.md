@@ -23,7 +23,7 @@ not hidden organizer scenarios, RF hardware, onboard perception or physical flig
 .venv\Scripts\python.exe -m pytest tests/test_mission_safety.py tests/test_uavx_profile.py tests/test_packet_evidence.py tests/test_evidence_metrics.py tests/test_submission_verifier.py tests/test_comm.py tests/test_route_recovery.py tests/test_interference.py tests/test_simulation.py -q --disable-warnings
 ```
 
-Final result: **164 passed in 9.64 s**, including 29 verifier regressions.
+Final result: **167 passed in 10.68 s**, including 29 verifier regressions and three GCS-partition regressions.
 Coverage includes unreachable traffic, duplicate logical packet IDs, edge-count
 hop limits, one-hop-per-tick forwarding, stale landing observations, crossing
 paths, future tasks, priority changes, removed relay slots, returning replacements,
@@ -37,14 +37,14 @@ per-attempt packet loss. Other limits follow the supplied sample slide. The
 disturbance is injected at t=900 s. Output folders must be new.
 
 ```powershell
-.venv\Scripts\python.exe run_simulation.py --profile uavx --seed 42 --output evidence/final2-nominal-42
-.venv\Scripts\python.exe run_simulation.py --profile uavx --seed 7 --output evidence/final2-nominal-7
-.venv\Scripts\python.exe run_simulation.py --profile uavx --seed 42 --disturbance outage --output evidence/final2-outage-42
-.venv\Scripts\python.exe run_simulation.py --profile uavx --seed 42 --disturbance failure --output evidence/final2-failure-42
-.venv\Scripts\python.exe verify_submission.py evidence/final2-nominal-42
-.venv\Scripts\python.exe verify_submission.py evidence/final2-nominal-7
-.venv\Scripts\python.exe verify_submission.py evidence/final2-outage-42
-.venv\Scripts\python.exe verify_submission.py evidence/final2-failure-42
+.venv\Scripts\python.exe run_simulation.py --profile uavx --seed 42 --output evidence/partition-fix-nominal-42
+.venv\Scripts\python.exe run_simulation.py --profile uavx --seed 7 --output evidence/partition-fix-nominal-7
+.venv\Scripts\python.exe run_simulation.py --profile uavx --seed 42 --disturbance outage --output evidence/partition-fix-outage-42
+.venv\Scripts\python.exe run_simulation.py --profile uavx --seed 42 --disturbance failure --output evidence/partition-fix-failure-42
+.venv\Scripts\python.exe verify_submission.py evidence/partition-fix-nominal-42
+.venv\Scripts\python.exe verify_submission.py evidence/partition-fix-nominal-7
+.venv\Scripts\python.exe verify_submission.py evidence/partition-fix-outage-42
+.venv\Scripts\python.exe verify_submission.py evidence/partition-fix-failure-42
 ```
 
 The runner exits 0 when evidence is written; add `--require-pass` to return 2 on
@@ -121,10 +121,12 @@ against coordinated edits to both artifacts and their hashes.
 The optional authoring environment uses `requirements-artifacts.txt` and ffmpeg:
 
 ```powershell
-python scripts/build_uavx_submission.py --runs evidence/final2-nominal-42 evidence/final2-nominal-7 evidence/final2-outage-42 evidence/final2-failure-42 --output submission-artifacts/uavx-2026-11-05
+python scripts/build_uavx_submission.py --runs evidence/partition-fix-nominal-42 evidence/partition-fix-nominal-7 evidence/partition-fix-outage-42 evidence/partition-fix-failure-42 --output submission-artifacts/uavx-2026-11-05
 ```
 
-The report is an eight-page draft following the supplied template concepts.
+The preserved baseline report is an eight-page draft following the supplied template concepts.
+Its numerical results also match the partition-fix reruns; source hashes are retained
+separately for each version.
 All eight rendered pages were visually checked. The H.264 demo is 1280 x 720,
 15 fps, 954 frames and 63.6 s; a complete ffmpeg decode reported no errors.
 The demo replays nominal seed-42 recorded positions at approximately 30x speed;

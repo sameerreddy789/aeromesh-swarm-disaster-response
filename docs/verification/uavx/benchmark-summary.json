@@ -3,22 +3,9 @@
   "scope": "Development benchmarks; abstract kinematics and synthetic observations. Compact summary only; full logs are required for verification.",
   "base_commit": "0ba914d79dc8223866c3333956c31251f5c5f661",
   "verifier_sha256": "3885e8436f5956800c11cbcc06fb1a08b2d0f878a8013e0a77ba6eda63adfa59",
-  "artifact_checks": {
-    "pdf_pages": 8,
-    "pdf_render_visually_checked": true,
-    "video_codec": "h264",
-    "video_dimensions": [
-      1280,
-      720
-    ],
-    "video_fps": 15,
-    "video_frames": 954,
-    "video_duration_s": 63.6,
-    "video_decode_errors": false
-  },
   "runs": [
     {
-      "run": "final2-nominal-42",
+      "run": "partition-fix-nominal-42",
       "metrics": {
         "evidence_scope": "abstract kinematic simulation; synthetic PoI observations; not flight qualification",
         "schema_version": 1,
@@ -257,7 +244,7 @@
         "numpy": "1.26.4",
         "networkx": "3.4.2",
         "source_sha256": {
-          "simulation/uavx.py": "25c94a591d2aa5fc88a882fb79b9efb2dc169c29995a095248b7e950f1b75644",
+          "simulation/uavx.py": "bda03fd9a43777a0061fb84a171388f77b7004a3e1c80b2c3571e3a1a96b4e78",
           "core/mission_safety.py": "25b8f8b50baf62de30beaf3aeecdeaebdb33b428a4a37b8b90525b3716d5f61c",
           "core/models.py": "3d3555c0efb60e5567071886fba5ccb43f9731812cef86f0f1ec33281e19a64c",
           "core/config.py": "eb0af1755fdf169e9ff6d90a1caf0c3a0b984b9d2c5fa044f0048597f7dff618",
@@ -268,7 +255,7 @@
         },
         "output_sha256": {
           "connectivity.json": "11d871733c926807fec0864ea5035ba754d50617f1157ecd723bcac82389ebd7",
-          "events.json": "f270a6082fa840249942c647b3cbb7f5c5be176d92cb9f40c63055bbdbd1c139",
+          "events.json": "37ea6b5e30371fc67c224b5a120daa2c835b665d811a0346fbf8e62da1ac5ceb",
           "metrics.json": "fb554da13c50e0e5e4018eb41341c43fe851c217f6165b538b8d5d93c7d977e0",
           "packets.json": "9515160a2fdd44970734530926bd23ee134392555335dcc3f81a4a456e6376f6",
           "trajectory.jsonl": "64c85394a9a3fc95c55217769fe0e546767b43ad42d7ae24e7c21356c4493402"
@@ -283,7 +270,7 @@
       }
     },
     {
-      "run": "final2-nominal-7",
+      "run": "partition-fix-nominal-7",
       "metrics": {
         "evidence_scope": "abstract kinematic simulation; synthetic PoI observations; not flight qualification",
         "schema_version": 1,
@@ -522,7 +509,7 @@
         "numpy": "1.26.4",
         "networkx": "3.4.2",
         "source_sha256": {
-          "simulation/uavx.py": "25c94a591d2aa5fc88a882fb79b9efb2dc169c29995a095248b7e950f1b75644",
+          "simulation/uavx.py": "bda03fd9a43777a0061fb84a171388f77b7004a3e1c80b2c3571e3a1a96b4e78",
           "core/mission_safety.py": "25b8f8b50baf62de30beaf3aeecdeaebdb33b428a4a37b8b90525b3716d5f61c",
           "core/models.py": "3d3555c0efb60e5567071886fba5ccb43f9731812cef86f0f1ec33281e19a64c",
           "core/config.py": "eb0af1755fdf169e9ff6d90a1caf0c3a0b984b9d2c5fa044f0048597f7dff618",
@@ -533,7 +520,7 @@
         },
         "output_sha256": {
           "connectivity.json": "5e7e2c7819d93248419ed88636e0bbf5e194d83c967749c189fd8665bd712466",
-          "events.json": "aa4f6deeb384e8901bbf0db4b76034bc961cc46c00c6c4683e7bb549588617cf",
+          "events.json": "c52ae8d9020e40c7ac6c799c62d4fbd2bea9bf57827f95852b85ac225033db4e",
           "metrics.json": "1597849dd10e8f4d174f4b44cbce218f542c2109108619eb69cb30a7a8661fd6",
           "packets.json": "e6bff6bd0c5916a46a2b2a57527352a4919659225dd1087f612b33e6f7991dd8",
           "trajectory.jsonl": "368ac0226362dc6779f14d3b6c74a3ff856ec6210496731f6ae62a51c37d7466"
@@ -548,7 +535,7 @@
       }
     },
     {
-      "run": "final2-outage-42",
+      "run": "partition-fix-outage-42",
       "metrics": {
         "evidence_scope": "abstract kinematic simulation; synthetic PoI observations; not flight qualification",
         "schema_version": 1,
@@ -830,7 +817,7 @@
         "numpy": "1.26.4",
         "networkx": "3.4.2",
         "source_sha256": {
-          "simulation/uavx.py": "25c94a591d2aa5fc88a882fb79b9efb2dc169c29995a095248b7e950f1b75644",
+          "simulation/uavx.py": "bda03fd9a43777a0061fb84a171388f77b7004a3e1c80b2c3571e3a1a96b4e78",
           "core/mission_safety.py": "25b8f8b50baf62de30beaf3aeecdeaebdb33b428a4a37b8b90525b3716d5f61c",
           "core/models.py": "3d3555c0efb60e5567071886fba5ccb43f9731812cef86f0f1ec33281e19a64c",
           "core/config.py": "eb0af1755fdf169e9ff6d90a1caf0c3a0b984b9d2c5fa044f0048597f7dff618",
@@ -841,7 +828,7 @@
         },
         "output_sha256": {
           "connectivity.json": "d8dad7c148bba5aee7271d18540c33fc914dc647a49f0cce857f7e1070aee5bd",
-          "events.json": "cb10c26dcd05209260cd7a10d3f01e8e23931945b053cbef73a5073f8b3d032b",
+          "events.json": "26f1978dceaa45e83a3984f58261ca4261f9f9699c3c0db3bfd53bb358efaf56",
           "metrics.json": "5af2946ae11df89548982c6db8a1741743a3d563a8f949f0b62882984f076dea",
           "packets.json": "1f09bb93e6e6b52f6e46a5b0303cce78eaafe5a24fec5534aa948ebdcdfd240b",
           "trajectory.jsonl": "54d7b1c6e13a49565134079a0eb267cb7aaaaea541df3095e8a909b495848352"
@@ -858,7 +845,7 @@
       }
     },
     {
-      "run": "final2-failure-42",
+      "run": "partition-fix-failure-42",
       "metrics": {
         "evidence_scope": "abstract kinematic simulation; synthetic PoI observations; not flight qualification",
         "schema_version": 1,
@@ -1140,7 +1127,7 @@
         "numpy": "1.26.4",
         "networkx": "3.4.2",
         "source_sha256": {
-          "simulation/uavx.py": "25c94a591d2aa5fc88a882fb79b9efb2dc169c29995a095248b7e950f1b75644",
+          "simulation/uavx.py": "bda03fd9a43777a0061fb84a171388f77b7004a3e1c80b2c3571e3a1a96b4e78",
           "core/mission_safety.py": "25b8f8b50baf62de30beaf3aeecdeaebdb33b428a4a37b8b90525b3716d5f61c",
           "core/models.py": "3d3555c0efb60e5567071886fba5ccb43f9731812cef86f0f1ec33281e19a64c",
           "core/config.py": "eb0af1755fdf169e9ff6d90a1caf0c3a0b984b9d2c5fa044f0048597f7dff618",
@@ -1151,7 +1138,7 @@
         },
         "output_sha256": {
           "connectivity.json": "d9de09417301af4b308a19d8b40f1e2c35a2b3ab98f0569ef25bfe970fe27e1f",
-          "events.json": "dfb04f4b2960e80c7389eff9dea2b4cf2a071c37f4f122909f3c6aada88adf25",
+          "events.json": "d70ffc83a41527533f132b43337de75e87187115421e892f8257b8d3c76a7ae2",
           "metrics.json": "9b313dcf9165a210c285d715da2964c0433912a170cf27e56ae182d76a583c12",
           "packets.json": "eecba175128e2077c356176bbaaedff386a97e9434d73ee6bf2b323cf471d931",
           "trajectory.jsonl": "1329a36e02f0d67532a4012ff05dd9072cdbd03425baae47fcfec7abbe874fd0"
@@ -1171,10 +1158,13 @@
     }
   ],
   "regression_suite": {
-    "passed": 164,
+    "passed": 167,
     "failed": 0,
-    "duration_s": 9.64,
+    "duration_s": 10.68,
     "new_verifier_regressions": 29,
-    "command": ".venv\\Scripts\\python.exe -m pytest tests/test_mission_safety.py tests/test_uavx_profile.py tests/test_packet_evidence.py tests/test_evidence_metrics.py tests/test_submission_verifier.py tests/test_comm.py tests/test_route_recovery.py tests/test_interference.py tests/test_simulation.py -q --disable-warnings"
-  }
+    "command": ".venv\\Scripts\\python.exe -m pytest tests/test_mission_safety.py tests/test_uavx_profile.py tests/test_packet_evidence.py tests/test_evidence_metrics.py tests/test_submission_verifier.py tests/test_comm.py tests/test_route_recovery.py tests/test_interference.py tests/test_simulation.py -q --disable-warnings",
+    "new_partition_regressions": 3
+  },
+  "change": "Recover on loss of a GCS path even when a disconnected group retains local neighbors. Full-run metrics unchanged versus the preserved baseline.",
+  "preserved_baseline_commit": "72f764f8805b6fa9fd89b63ce0b027fef4fdf2b2"
 }

@@ -51,6 +51,11 @@ checkouts were preserved; implementation lives in a separate AeroMesh-UAVX clone
 - Final review found that an empty manifest and fabricated constraint booleans
   could pass the verifier. Complete artifact inventories and consistency checks
   now prevent that false success; hashes are not a claim of tamper-proof evidence.
+- A connected group of UAVs could lose its GCS path while retaining local
+  neighbors, bypassing the old recovery trigger. Recovery now checks the actual
+  GCS-connected component and logs whether dispatch was caused by lost GCS
+  connectivity or low energy. Three regressions and all four full reruns passed
+  their expected outcomes; the original strict fault failures remain.
 
 ## Known limits
 

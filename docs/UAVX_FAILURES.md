@@ -84,3 +84,8 @@ relay replacements, deleted-slot promotion/KeyError, excessive-speed candidates,
 landing oscillation, premature landing timestamps and fault-event argument crash.
 The verifier now rejects incomplete artifact manifests and contradictory claims.
 These corrected errors are not listed as outstanding failures.
+
+Follow-up: recovery now detects disconnected groups that retain local neighbors
+but have no GCS path. The targeted suite passes 167 tests, and four full reruns
+retain the results above. This corrects a detection gap; it does not restore a
+disabled sole radio or land a permanently failed aircraft.
