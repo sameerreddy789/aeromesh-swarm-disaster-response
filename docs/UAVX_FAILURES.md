@@ -63,6 +63,11 @@ retained locally and described in the [changelog](UAVX_CHANGELOG.md).
   URL. The submission route requires resolution through official instructions.
 - Historical MIT references are unsupported by a root LICENSE in the original
   AeroMesh tree; its owner needs to resolve the licensing terms.
+- PR delivery is blocked by the connected GitHub credential: the branch was
+  pushed to `sameerreddy789:codex/uavx-submission`, but GitHub rejected
+  `CreatePullRequest` for missing permissions (the REST route also returned 404).
+  No PR was created. The prepared PR description is included in the local draft
+  package; creation needs an account/credential with the required PR access.
 
 ## Errors already corrected
 
