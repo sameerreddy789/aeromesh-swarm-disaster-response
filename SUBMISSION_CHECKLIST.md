@@ -1,3 +1,5 @@
+> Historical document. Commands and success claims below are not current validation. Use [README](README.md) and [UAV-X validation](docs/UAVX_VALIDATION.md).
+
 # AeroMesh-Swarm Stage 1 Submission Checklist
 
 **Project:** AeroMesh-Swarm: Resilient Multi-Hop UAV Swarm for Disaster Reconnaissance  

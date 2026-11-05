@@ -1,3 +1,5 @@
+> Historical document. Commands and success claims below are not current validation. Use [README](README.md) and [UAV-X validation](docs/UAVX_VALIDATION.md).
+
 # AeroMesh-Swarm: Competition Judge Evaluation Guide
 ## UAV Swarm Disaster Response Challenge - Stage 1 Submission
 

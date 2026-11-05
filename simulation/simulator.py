@@ -36,6 +36,10 @@ class MissionSimulator:
         self.dt = config.mission.dt
         self.next_routing_update = 0.0
         self.next_allocation_update = 0.0
+        self.next_telemetry_time = 0.0
+        self.connectivity_samples = []
+        self.mission_state.connectivity_samples = self.connectivity_samples
+        self.mission_state.mesh_router = self.mesh_router
 
     def initialize_scenario(self, num_uavs: int, poi_positions: List[Vector3D],
                             poi_priorities: Optional[List[float]] = None):
@@ -104,15 +108,19 @@ class MissionSimulator:
         # 7. Generate telemetry packets from scouts
         self._generate_telemetry_packets()
 
-        # 9. Vision / detection pipeline (R3: separate from physics)
-        self._run_vision_detection(dt)
+        # No camera input is supplied by this abstract simulator.
+        # Do not report detector construction as a vision measurement.
+        self.connectivity_samples.append({
+            "time_s": t, "dt_s": self.dt,
+            "operational": len(self.mission_state.get_operational_uavs()),
+            "connected": sum(u.connected_to_gcs for u in self.mission_state.get_operational_uavs()),
+        })
 
         # 10. Mapping update (R3: record observations)
         self._update_mapping()
 
         # 8. Check mission completion
-        if self.mission_state.is_mission_complete():
-            self.mission_state.mission_complete = True
+        self.mission_state.mission_complete = self.mission_state.is_mission_complete()
 
         # Advance time
         self.mission_state.time += self.dt
@@ -212,19 +220,21 @@ class MissionSimulator:
 
     def _generate_telemetry_packets(self):
         """Generates periodic telemetry packets from surveying UAVs to GCS"""
+        if self.mission_state.time + 1e-9 < self.next_telemetry_time:
+            return
+        self.next_telemetry_time = self.mission_state.time + 5.0
         for uav in self.mission_state.get_operational_uavs():
-            if uav.state == UAVState.SURVEYING and uav.connected_to_gcs:
-                # Send telemetry packet every 5 seconds
-                if int(self.mission_state.time) % 5 == 0:
-                    packet = Packet(
-                        packet_id=self.mesh_router.packets_sent,
-                        packet_type=PacketType.DATA,
-                        source_id=uav.id,
-                        dest_id=-1,  # GCS
-                        payload_size=2048.0,  # 2KB telemetry + imagery
-                        payload={'uav_id': uav.id, 'poi_id': uav.assigned_poi, 'battery': uav.battery_level}
-                    )
-                    self.mesh_router.send_packet(packet)
+            if uav.position.z <= 0.5:
+                continue
+            # Generate offered traffic even while disconnected: loss belongs in PDR.
+            packet = Packet(
+                packet_id=self.mesh_router.packets_sent,
+                packet_type=PacketType.DATA,
+                source_id=uav.id, dest_id=-1, payload_size=2048.0,
+                payload={'uav_id': uav.id, 'poi_id': uav.assigned_poi,
+                         'battery': uav.battery_level},
+            )
+            self.mesh_router.send_packet(packet)
 
     def _update_safety_metrics(self):
         """Updates safety metrics: min UAV separation, geofence violations, and collisions."""

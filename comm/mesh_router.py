@@ -3,7 +3,9 @@ Dynamic Multi-Hop Mesh Routing Engine
 Implements AODV-inspired dynamic routing with ETX (Expected Transmission Count) metrics,
 packet queuing, forwarding, and latency tracking.
 """
-import heapq
+import math
+import random
+from copy import deepcopy
 import networkx as nx
 from typing import Dict, List, Optional, Tuple, Set
 from collections import defaultdict, deque
@@ -15,7 +17,23 @@ from comm.channel import RFChannel
 class MeshRouter:
     """Dynamic multi-hop routing engine for UAV mesh network"""
 
-    def __init__(self, mission_state: MissionState, event_manager=None):
+    def __init__(self, mission_state: MissionState, event_manager=None,
+                 max_range_m: Optional[float] = None, rng=None,
+                 hop_delay_s: float = 0.0):
+        """Create an abstract router.
+
+        ``rng`` controls packet-loss draws and accepts ``random.Random(seed)``.
+        RF channel sampling retains its existing NumPy RNG. ``hop_delay_s``
+        is the minimum time between forwarding attempts; simulation time is
+        owned by the caller, never wall-clock time.
+        """
+        if max_range_m is not None and (not math.isfinite(max_range_m) or max_range_m <= 0):
+            raise ValueError("max_range_m must be positive and finite")
+        if not math.isfinite(hop_delay_s) or hop_delay_s < 0:
+            raise ValueError("hop_delay_s must be nonnegative and finite")
+        self.max_range_m = max_range_m
+        self.hop_delay_s = hop_delay_s
+        self.rng = rng if rng is not None else random
         self.mission_state = mission_state
         self.rf_channel = RFChannel()
         self.cfg_rf = config.rf
@@ -47,6 +65,11 @@ class MeshRouter:
         self.ttl_drops = 0
         self.recovery_latencies: List[float] = []
         self.delivered_packet_ids: Set[int] = set()
+        self.terminal_packet_ids: Set[int] = set()
+        self.packet_events: List[Dict] = []
+        self._offered_packets: Dict[int, Dict] = {}
+        self._ready_at: Dict[int, float] = {}
+        self.reroutes_found = 0
 
         self.last_routing_update = 0.0
 
@@ -79,6 +102,8 @@ class MeshRouter:
                 pos_a = self._get_node_position(node_a)
                 pos_b = self._get_node_position(node_b)
 
+                if self.max_range_m is not None and (pos_a - pos_b).norm() > self.max_range_m:
+                    continue
                 link_quality = self.rf_channel.calculate_link_quality(
                     pos_a, pos_b, interference_event=self.event_manager)
 
@@ -92,11 +117,10 @@ class MeshRouter:
         gcs.connected_uavs.clear()
 
         for uav_id, uav in uavs.items():
-            if not uav.is_operational():
-                continue
-
             uav.neighbor_uavs.clear()
             uav.connected_to_gcs = False
+            if not uav.is_operational():
+                continue
 
             if self.network_graph.has_node(uav_id):
                 neighbors = list(self.network_graph.neighbors(uav_id))
@@ -157,164 +181,174 @@ class MeshRouter:
 
         return None
 
-    def send_packet(self, packet: Packet) -> bool:
-        """
-        Initiates packet transmission from source.
-        Computes route and adds to packet queue.
-        """
-        source_id = packet.source_id
-        dest_id = packet.dest_id
-
-        # Compute path using current routing table
-        path = self._find_path(source_id, dest_id)
-
-        if not path:
-            self.packets_dropped += 1
+    def _record_offer(self, packet: Packet) -> bool:
+        """Freeze one logical packet's provenance; duplicate IDs are idempotent."""
+        if packet.packet_id in self._offered_packets:
             return False
+        self.packets_sent += 1
+        self._offered_packets[packet.packet_id] = {
+            "packet_id": packet.packet_id,
+            "source_id": packet.source_id,
+            "dest_id": packet.dest_id,
+            "payload": deepcopy(packet.payload),
+            "creation_time_s": packet.creation_time,
+        }
+        self._event("offered", packet)
+        return True
 
+    def _event(self, event_type: str, packet: Packet, **details) -> None:
+        event = deepcopy(self._offered_packets[packet.packet_id])
+        event.update(type=event_type, time_s=self.mission_state.time, **details)
+        self.packet_events.append(event)
+
+    def _node_operational(self, node_id: int) -> bool:
+        if node_id == -1:
+            return True
+        node = self.mission_state.uavs.get(node_id)
+        return node is not None and node.is_operational()
+
+    def send_packet(self, packet: Packet) -> bool:
+        """Offer once, then enqueue or record a terminal drop.
+
+        A repeated packet ID is rejected without changing denominators,
+        provenance, or the original packet's terminal outcome.
+        """
+        if packet.packet_id in self._offered_packets:
+            return False
+        packet.creation_time = self.mission_state.time
+        self._record_offer(packet)
+        if not self._node_operational(packet.source_id):
+            self._record_drop(packet, "source_unavailable")
+            return False
+        path = self._find_path(packet.source_id, packet.dest_id)
+        if not path:
+            self._record_drop(packet, "no_route")
+            return False
         packet.path = path
         packet.current_hop = 0
-        packet.creation_time = self.mission_state.time
+        self._ready_at[packet.packet_id] = self.mission_state.time + self.hop_delay_s
+        self.packet_queues[packet.source_id].append(packet)
+        return True
 
-        # Add to source queue
-        self.packet_queues[source_id].append(packet)
-        self.packets_sent += 1
+    def _record_drop(self, packet: Packet, reason: str) -> None:
+        if packet.packet_id in self.terminal_packet_ids:
+            return
+        self.terminal_packet_ids.add(packet.packet_id)
+        self._ready_at.pop(packet.packet_id, None)
+        self.packets_dropped += 1
+        if packet.dest_id == -1:
+            self.mission_state.gcs.packets_dropped += 1
+        self._event("dropped", packet, reason=reason)
 
+    def _reroute(self, packet: Packet, current_node: int, next_node: int) -> bool:
+        self.reroute_attempts += 1
+        alternative = self._find_alternative_path(
+            current_node, packet.dest_id,
+            broken_edge=(current_node, next_node),
+            visited_nodes=set(packet.path[:packet.current_hop + 1]),
+        )
+        if not alternative or len(alternative) <= 1:
+            return False
+        remaining_hops = len(alternative) - 1
+        if (packet.current_hop + remaining_hops > self.cfg_rf.max_hops
+                or remaining_hops > packet.ttl):
+            return False
+        packet.path = packet.path[:packet.current_hop] + alternative
+        packet.reroute_count += 1
+        packet.retry_count = 0
+        self.reroutes_found += 1
+        # Route computation is not service restoration or packet delivery.
+        self._ready_at[packet.packet_id] = self.mission_state.time + self.hop_delay_s
+        self.packet_queues[current_node].append(packet)
         return True
 
     def process_packet_forwarding(self, dt: float):
+        """Service each queued packet once and at most one hop per packet per call.
+
+        Snapshot outgoing packets before forwarding so iteration order cannot
+        let one packet traverse several pre-existing queues in the same tick.
+        Queue wait and retry wait remain in end-to-end simulation latency.
         """
-        Processes packet forwarding across all hops with robust mid-path rerouting.
-        If the selected next hop is no longer usable, attempts to recompute
-        a loop-free alternative route from the current node. Respects packet TTL,
-        prevents duplicate delivery, and tracks recovery metrics.
-        """
-        current_time = self.mission_state.time
-
-        # Process each node's outgoing queue
-        for node_id in list(self.packet_queues.keys()):
-            if not self.packet_queues[node_id]:
+        outgoing = []
+        for node_id, queue in list(self.packet_queues.items()):
+            outgoing.extend((node_id, queue.popleft()) for _ in range(len(queue)))
+        processed = set()
+        for node_id, packet in outgoing:
+            packet_id = packet.packet_id
+            if packet_id in processed or packet_id in self.terminal_packet_ids:
                 continue
-
-            packet = self.packet_queues[node_id].popleft()
-
-            # Prevent duplicate delivery
-            if packet.packet_id in self.delivered_packet_ids:
+            processed.add(packet_id)
+            if not self._node_operational(node_id):
+                self._record_drop(packet, "current_node_unavailable")
                 continue
-
-            # Check packet TTL / hop limit
-            if packet.ttl <= 0 or packet.current_hop >= self.cfg_rf.max_hops:
-                self.packets_dropped += 1
-                self.ttl_drops += 1
+            if self.mission_state.time + 1e-9 < self._ready_at.get(packet_id, 0):
+                self.packet_queues[node_id].appendleft(packet)
                 continue
-
-            # Check if already at destination
-            if packet.current_hop >= len(packet.path) - 1 or (packet.path and packet.path[packet.current_hop] == packet.dest_id):
+            if (not packet.path or packet.current_hop < 0
+                    or packet.current_hop >= len(packet.path)
+                    or packet.path[packet.current_hop] != node_id):
+                self._record_drop(packet, "invalid_path")
+                continue
+            if node_id == packet.dest_id:
                 self._deliver_packet(packet)
                 continue
-
-            current_node = packet.path[packet.current_hop]
+            if packet.ttl <= 0 or packet.current_hop >= self.cfg_rf.max_hops:
+                self.ttl_drops += 1
+                self._record_drop(packet, "hop_limit")
+                continue
+            if packet.current_hop + 1 >= len(packet.path):
+                self._record_drop(packet, "invalid_destination")
+                continue
             next_node = packet.path[packet.current_hop + 1]
-
-            # Verify that the next hop node is operational if it's a UAV
-            next_node_operational = True
-            if next_node >= 0:
-                next_uav = self.mission_state.uavs.get(next_node)
-                if next_uav is None or not next_uav.is_operational():
-                    next_node_operational = False
-
-            # Check link quality of the planned next hop
-            link_key = (current_node, next_node)
-            link_is_connected = False
-            if next_node_operational and link_key in self.link_quality_cache:
-                link_is_connected = self.link_quality_cache[link_key].get('is_connected', False)
-
-            # If link is broken or next node failed: attempt mid-path reroute
-            if not link_is_connected:
-                self.reroute_attempts += 1
-                visited = set(packet.path[:packet.current_hop + 1])
-                alt_path = self._find_alternative_path(
-                    current_node, packet.dest_id,
-                    broken_edge=(current_node, next_node),
-                    visited_nodes=visited
-                )
-
-                if alt_path and len(alt_path) > 1:
-                    # Successfully found alternative route
-                    packet.path = packet.path[:packet.current_hop] + alt_path
-                    packet.reroute_count += 1
-                    packet.ttl -= 1
-                    self.successful_recoveries += 1
-                    # Re-queue at current node for immediate processing on alternative path
-                    self.packet_queues[current_node].append(packet)
-                    continue
-                else:
-                    # Destination unreachable through alternative route
-                    self.packets_dropped += 1
-                    continue
-
-            # Link is connected: check probabilistic packet drop based on PDR
-            link_quality = self.link_quality_cache[link_key]
-            pdr = link_quality['pdr']
-
-            import random
-            if random.random() > pdr:
-                # Transmission failed on this attempt
+            link_quality = self.link_quality_cache.get((node_id, next_node))
+            connected = (self._node_operational(next_node) and link_quality is not None
+                         and link_quality.get("is_connected", False))
+            if connected and self.max_range_m is not None:
+                connected = ((self._get_node_position(node_id) -
+                              self._get_node_position(next_node)).norm() <= self.max_range_m)
+            if not connected:
+                if not self._reroute(packet, node_id, next_node):
+                    self._record_drop(packet, "route_lost")
+                continue
+            if self.rng.random() >= link_quality["pdr"]:
                 if packet.retry_count < packet.max_retries:
                     packet.retry_count += 1
-                    # Re-queue for retransmission
-                    self.packet_queues[current_node].append(packet)
-                    continue
-                else:
-                    # Retries exhausted: try alternative route before dropping
-                    self.reroute_attempts += 1
-                    visited = set(packet.path[:packet.current_hop + 1])
-                    alt_path = self._find_alternative_path(
-                        current_node, packet.dest_id,
-                        broken_edge=(current_node, next_node),
-                        visited_nodes=visited
-                    )
-                    if alt_path and len(alt_path) > 1:
-                        packet.path = packet.path[:packet.current_hop] + alt_path
-                        packet.reroute_count += 1
-                        packet.retry_count = 0
-                        packet.ttl -= 1
-                        self.successful_recoveries += 1
-                        self.packet_queues[current_node].append(packet)
-                        continue
-                    else:
-                        self.packets_dropped += 1
-                        continue
-
-            # Successful transmission over this hop
+                    self._ready_at[packet_id] = self.mission_state.time + self.hop_delay_s
+                    self.packet_queues[node_id].append(packet)
+                elif not self._reroute(packet, node_id, next_node):
+                    self._record_drop(packet, "retries_exhausted")
+                continue
             packet.advance_hop()
             packet.ttl -= 1
+            packet.retry_count = 0
             self.total_hops += 1
-
-            if packet.current_hop >= len(packet.path) - 1 or packet.path[packet.current_hop] == packet.dest_id:
-                # Reached destination
+            self._ready_at[packet_id] = self.mission_state.time + self.hop_delay_s
+            if next_node == packet.dest_id:
                 self._deliver_packet(packet)
             else:
-                # Forward to next hop
                 self.packet_queues[next_node].append(packet)
 
     def _deliver_packet(self, packet: Packet):
-        """Delivers packet to final destination, preventing duplicate delivery"""
-        if packet.packet_id in self.delivered_packet_ids:
-            return  # Prevent duplicate delivery
+        """Record terminal delivery once, including offered-to-receipt latency."""
+        if packet.packet_id in self.terminal_packet_ids:
+            return
+        # Support existing direct delivery callers without corrupting accounting.
+        self._record_offer(packet)
+        self.terminal_packet_ids.add(packet.packet_id)
         self.delivered_packet_ids.add(packet.packet_id)
+        self._ready_at.pop(packet.packet_id, None)
         self.packets_delivered += 1
-
+        provenance = self._offered_packets[packet.packet_id]
+        latency = self.mission_state.time - provenance["creation_time_s"]
         if packet.reroute_count > 0:
-            rec_lat = self.mission_state.time - packet.creation_time
-            self.recovery_latencies.append(rec_lat)
-
+            self.successful_recoveries += 1
+            # This is rerouted-packet end-to-end latency, not fault recovery time.
+            self.recovery_latencies.append(latency)
+        self._event("delivered", packet, latency_s=latency, hops=packet.current_hop,
+                    reroute_count=packet.reroute_count)
         if packet.dest_id == -1:
-            # Delivered to GCS
-            gcs = self.mission_state.gcs
-            gcs.packets_received += 1
-            latency = packet.get_latency(self.mission_state.time)
-            gcs.total_latency += latency
+            self.mission_state.gcs.packets_received += 1
+            self.mission_state.gcs.total_latency += latency
 
     def _find_path(self, source_id: int, dest_id: int) -> Optional[List[int]]:
         """Finds shortest path from source to destination using network graph"""
@@ -323,7 +357,7 @@ class MeshRouter:
 
         try:
             path = nx.shortest_path(self.network_graph, source_id, dest_id, weight='weight')
-            if len(path) > self.cfg_rf.max_hops:
+            if len(path) - 1 > self.cfg_rf.max_hops:
                 return None
             return path
         except (nx.NetworkXNoPath, nx.NodeNotFound):
@@ -340,6 +374,17 @@ class MeshRouter:
 
         try:
             H = self.network_graph.copy()
+            for node in list(H.nodes()):
+                if not self._node_operational(node):
+                    H.remove_node(node)
+            for u, v in list(H.edges()):
+                quality = self.link_quality_cache.get((u, v))
+                if quality is not None and not quality.get("is_connected", False):
+                    H.remove_edge(u, v)
+                elif self.max_range_m is not None and (
+                    self._get_node_position(u) - self._get_node_position(v)
+                ).norm() > self.max_range_m:
+                    H.remove_edge(u, v)
             if broken_edge:
                 u, v = broken_edge
                 if H.has_edge(u, v):
@@ -354,7 +399,7 @@ class MeshRouter:
                         H.remove_node(node)
 
             path = nx.shortest_path(H, source_id, dest_id, weight='weight')
-            if len(path) > self.cfg_rf.max_hops:
+            if len(path) - 1 > self.cfg_rf.max_hops:
                 return None
             return path
         except (nx.NetworkXNoPath, nx.NodeNotFound):
@@ -371,7 +416,7 @@ class MeshRouter:
         """Returns network performance statistics"""
         pdr_overall = self.packets_delivered / max(1, self.packets_sent)
         avg_latency = self.mission_state.gcs.total_latency / max(1, self.mission_state.gcs.packets_received)
-        avg_hops = self.total_hops / max(1, self.packets_delivered)
+        avg_hops = sum(e["hops"] for e in self.packet_events if e["type"] == "delivered") / max(1, self.packets_delivered)
         avg_rec_lat = (sum(self.recovery_latencies) / len(self.recovery_latencies)) if self.recovery_latencies else 0.0
 
         return {
@@ -379,22 +424,10 @@ class MeshRouter:
             'packets_delivered': self.packets_delivered,
             'packets_dropped': self.packets_dropped,
             'reroute_attempts': self.reroute_attempts,
+            'reroutes_found': self.reroutes_found,
             'successful_recoveries': self.successful_recoveries,
             'ttl_drops': self.ttl_drops,
             'avg_recovery_latency': avg_rec_lat,
-            'pdr': pdr_overall,
-            'avg_latency': avg_latency,
-            'avg_hops': avg_hops,
-            'num_nodes': self.network_graph.number_of_nodes(),
-            'num_edges': self.network_graph.number_of_edges()
-        }
-        avg_latency = self.mission_state.gcs.total_latency / max(1, self.mission_state.gcs.packets_received)
-        avg_hops = self.total_hops / max(1, self.packets_delivered)
-
-        return {
-            'packets_sent': self.packets_sent,
-            'packets_delivered': self.packets_delivered,
-            'packets_dropped': self.packets_dropped,
             'pdr': pdr_overall,
             'avg_latency': avg_latency,
             'avg_hops': avg_hops,
