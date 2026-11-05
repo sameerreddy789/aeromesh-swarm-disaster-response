@@ -50,6 +50,11 @@ retained locally and described in the [changelog](UAVX_CHANGELOG.md).
     artifacts; they are not independent dynamics verification or protection
     against coordinated edits to both logs and hashes. Trajectory export is
     sampled every 2 s; runtime safety uses the finer 0.5 s movement intervals.
+11. **Legacy checkout issue:** the root tracks `aeromesh-swarm-disaster-response`
+    as a Git submodule pointer (`7cf5a89`) without a `.gitmodules` mapping. The
+    required nested source cannot be resolved from that metadata alone. The
+    UAV-X profile does not use it; the draft package records its pointer without
+    claiming to bundle the nested repository's contents.
 
 ## Submission gaps
 
