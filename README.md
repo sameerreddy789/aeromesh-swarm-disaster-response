@@ -14,6 +14,12 @@ City/Unreal work is paused for storage. The core runs with the existing Python
 environment and needs no city asset download. Its total fleet is **30 UAVs,
 including spares**, with 30 nominal charging pads and 15 in the resource test.
 
+A separate [rigid-body physics backend](docs/UAVX_PHYSICS.md) now connects that
+planner to four-motor Bullet quadcopters and a native 3D eagle observer. Launch
+`Run-AeroMesh-Physics.cmd` for this development profile. It uses the existing
+Panda3D installation and procedural models; its qualification is separate
+from the kinematic results below.
+
 The [current failure register](docs/UAVX_FAILURES.md) separates observed fault-run
 failures, unqualified assumptions, submission gaps and errors already corrected.
 The [IIT Bombay action plan](docs/UAVX_NEXT_STEPS.md) prioritizes the remaining

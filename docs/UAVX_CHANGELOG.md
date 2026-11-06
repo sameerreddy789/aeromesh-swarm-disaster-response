@@ -4,6 +4,28 @@ Original repair baseline: `0ba914d79dc8223866c3333956c31251f5c5f661`.
 Working branch: `codex/uavx-submission`. Original DroneOS and downloaded AeroMesh
 checkouts were preserved; implementation lives in a separate AeroMesh-UAVX clone.
 
+## Separate rigid-body backend - 6 November 2026
+
+Added an asset-free, fixed-30-UAV Bullet backend with four motor forces,
+attitude/inertia, motor lag, gravity, drag/wind, collision contact and power-cut
+freefall. The existing mission algorithms consume measured body telemetry;
+an isolated planning copy supplies velocity references only. The native 3D
+observer has procedural quadcopters, eagle/close views and zoom/pan controls.
+City/Unreal files remain paused and excluded from this addition.
+
+Physics-specific integration repairs include slower-speed cohort budgets,
+braking-aware velocity constraints, contact-based settled landing, cumulative
+collision reporting and 120 Hz speed extrema. Testing caught an endurance
+accounting gap on the interval ending in disarm; consumption is now measured
+per 20 Hz control interval. Stale/disarmed raw motor overrides cannot reactivate
+through a later normal command. The viewer retains body nodes until closed.
+
+The [physics guide](UAVX_PHYSICS.md) describes launch commands, evidence and
+model limits. The original kinematic runtime files and packaged matrix remain
+unchanged. Physics results require their own verifier and cannot inherit the
+previous kinematic qualification. The model is uncalibrated; electrical battery,
+propeller aerodynamics, city collision geometry and physical flight remain open.
+
 ## Admission and readiness correction - 6 November 2026
 
 The canonical matrix completed all 19 cases with valid, source-stable evidence:
