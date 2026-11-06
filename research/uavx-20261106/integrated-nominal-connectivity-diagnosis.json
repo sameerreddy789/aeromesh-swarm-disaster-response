@@ -1,0 +1,410 @@
+{
+  "created_utc": "2026-11-06T05:55:03.651035+00:00",
+  "scope": "Read-only diagnosis of a completed failed continuous-connectivity check; no production changes or physics rerun",
+  "evidence_path": "evidence/research-physics-nominal-20261106-01",
+  "result": "Mission completed tasks and landing; strict mission pass false because continuous_connectivity failed",
+  "completion_time_s": 2514.0,
+  "sample_cadence": {
+    "safety_hz": 20,
+    "physics_telemetry_hz": 1,
+    "trajectory_interval_s": 2
+  },
+  "outage_samples": 396,
+  "accounted_downtime_s": 19.8,
+  "windows": [
+    {
+      "first_bad_sample_s": 278.8,
+      "last_bad_sample_s": 283.15,
+      "sample_count": 88,
+      "active_counts": {
+        "20": 88
+      },
+      "disconnected_count": 2,
+      "next_good_sample_s": 283.2,
+      "accounted_downtime_s": 4.4,
+      "id": "W1",
+      "phase": "PoI 0 to PoI 6 pivot after formation commit at 242.5 s; three retired aircraft returning",
+      "disconnected_ids_at_available_in_window_position_samples": [
+        1,
+        8
+      ],
+      "edges": [
+        {
+          "time_s": 278.5,
+          "nodes": [
+            8,
+            28
+          ],
+          "distance_m": 99.36485375737189,
+          "range_margin_m": 0.6351462426281103,
+          "source_file": "physics-telemetry.jsonl"
+        },
+        {
+          "time_s": 279.5,
+          "nodes": [
+            8,
+            28
+          ],
+          "distance_m": 101.00841132710731,
+          "range_margin_m": -1.0084113271073107,
+          "source_file": "physics-telemetry.jsonl"
+        },
+        {
+          "time_s": 283.5,
+          "nodes": [
+            1,
+            7
+          ],
+          "distance_m": 99.07828762674956,
+          "range_margin_m": 0.9217123732504433,
+          "source_file": "physics-telemetry.jsonl"
+        }
+      ],
+      "position_identity_status": "Confirmed at available position samples; not every 20 Hz sample"
+    },
+    {
+      "first_bad_sample_s": 1235.55,
+      "last_bad_sample_s": 1239.3,
+      "sample_count": 76,
+      "active_counts": {
+        "16": 10,
+        "19": 60,
+        "20": 6
+      },
+      "disconnected_count": 16,
+      "next_good_sample_s": 1239.35,
+      "accounted_downtime_s": 3.8,
+      "id": "W2",
+      "phase": "PoI 8 to PoI 3 pivot after formation commit at 1171.5 s; loss causes replacement dispatch",
+      "disconnected_ids_at_available_in_window_position_samples": [
+        0,
+        1,
+        6,
+        7,
+        8,
+        12,
+        13,
+        14,
+        18,
+        19,
+        20,
+        21,
+        24,
+        25,
+        26,
+        27
+      ],
+      "edges": [
+        {
+          "time_s": 1235.5,
+          "nodes": [
+            27,
+            5
+          ],
+          "distance_m": 99.95146907323411,
+          "range_margin_m": 0.04853092676589199,
+          "source_file": "physics-telemetry.jsonl"
+        },
+        {
+          "time_s": 1236.0,
+          "nodes": [
+            27,
+            5
+          ],
+          "distance_m": 100.91847546868604,
+          "range_margin_m": -0.9184754686860401,
+          "source_file": "trajectory.jsonl"
+        },
+        {
+          "time_s": 1238.5,
+          "nodes": [
+            19,
+            29
+          ],
+          "distance_m": 100.31405386133962,
+          "range_margin_m": -0.314053861339616,
+          "source_file": "physics-telemetry.jsonl"
+        },
+        {
+          "time_s": 1239.5,
+          "nodes": [
+            24,
+            29
+          ],
+          "distance_m": 99.7036898942721,
+          "range_margin_m": 0.2963101057278976,
+          "source_file": "physics-telemetry.jsonl"
+        }
+      ],
+      "position_identity_status": "Confirmed at available position samples; not every 20 Hz sample"
+    },
+    {
+      "first_bad_sample_s": 1309.0,
+      "last_bad_sample_s": 1317.55,
+      "sample_count": 172,
+      "active_counts": {
+        "20": 1,
+        "23": 50,
+        "24": 120,
+        "25": 1
+      },
+      "disconnected_count": 6,
+      "next_good_sample_s": 1317.6,
+      "accounted_downtime_s": 8.6,
+      "id": "W3",
+      "phase": "Same PoI 3 deployment and replacement transit",
+      "disconnected_ids_at_available_in_window_position_samples": [
+        0,
+        1,
+        6,
+        14,
+        21,
+        27
+      ],
+      "edges": [
+        {
+          "time_s": 1308.5,
+          "nodes": [
+            27,
+            8
+          ],
+          "distance_m": 98.45763319253643,
+          "range_margin_m": 1.5423668074635657,
+          "source_file": "physics-telemetry.jsonl"
+        },
+        {
+          "time_s": 1309.5,
+          "nodes": [
+            27,
+            8
+          ],
+          "distance_m": 101.04020204121737,
+          "range_margin_m": -1.0402020412173698,
+          "source_file": "physics-telemetry.jsonl"
+        },
+        {
+          "time_s": 1317.5,
+          "nodes": [
+            27,
+            7
+          ],
+          "distance_m": 100.15563377992125,
+          "range_margin_m": -0.15563377992124572,
+          "source_file": "physics-telemetry.jsonl"
+        },
+        {
+          "time_s": 1318.0,
+          "nodes": [
+            27,
+            7
+          ],
+          "distance_m": 98.4420088759972,
+          "range_margin_m": 1.5579911240027968,
+          "source_file": "trajectory.jsonl"
+        }
+      ],
+      "position_identity_status": "Confirmed at available position samples; not every 20 Hz sample"
+    },
+    {
+      "first_bad_sample_s": 2261.0,
+      "last_bad_sample_s": 2263.65,
+      "sample_count": 54,
+      "active_counts": {
+        "21": 54
+      },
+      "disconnected_count": 21,
+      "next_good_sample_s": 2263.7,
+      "accounted_downtime_s": 2.7,
+      "id": "W4",
+      "phase": "Mission return after all PoIs surveyed; withdrawal begins 2247.5 s",
+      "disconnected_ids_at_available_in_window_position_samples": [
+        2,
+        3,
+        4,
+        5,
+        9,
+        10,
+        11,
+        14,
+        15,
+        16,
+        17,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29
+      ],
+      "edges": [
+        {
+          "time_s": 2260.5,
+          "nodes": [
+            -1,
+            24
+          ],
+          "distance_m": 98.5833632715809,
+          "range_margin_m": 1.4166367284191068,
+          "source_file": "physics-telemetry.jsonl"
+        },
+        {
+          "time_s": 2262.0,
+          "nodes": [
+            -1,
+            24
+          ],
+          "distance_m": 101.59029768502626,
+          "range_margin_m": -1.5902976850262576,
+          "source_file": "trajectory.jsonl"
+        },
+        {
+          "time_s": 2262.0,
+          "nodes": [
+            8,
+            24
+          ],
+          "distance_m": 112.05503122225453,
+          "range_margin_m": -12.055031222254527,
+          "source_file": "trajectory.jsonl"
+        },
+        {
+          "time_s": 2264.0,
+          "nodes": [
+            -1,
+            24
+          ],
+          "distance_m": 99.59133761786741,
+          "range_margin_m": 0.4086623821325901,
+          "source_file": "trajectory.jsonl"
+        }
+      ],
+      "position_identity_status": "Confirmed at available position samples; not every 20 Hz sample"
+    },
+    {
+      "first_bad_sample_s": 2324.8,
+      "last_bad_sample_s": 2325.05,
+      "sample_count": 6,
+      "active_counts": {
+        "19": 5,
+        "18": 1
+      },
+      "disconnected_count": 16,
+      "next_good_sample_s": 2325.1,
+      "accounted_downtime_s": 0.3,
+      "id": "W5",
+      "phase": "Mission return with staggered landings",
+      "disconnected_ids_at_available_in_window_position_samples": null,
+      "edges": [
+        {
+          "time_s": 2324.5,
+          "nodes": [
+            3,
+            20
+          ],
+          "distance_m": 99.57201805191316,
+          "range_margin_m": 0.4279819480868383,
+          "source_file": "physics-telemetry.jsonl"
+        },
+        {
+          "time_s": 2325.5,
+          "nodes": [
+            3,
+            20
+          ],
+          "distance_m": 100.73052942611751,
+          "range_margin_m": -0.7305294261175135,
+          "source_file": "physics-telemetry.jsonl"
+        },
+        {
+          "time_s": 2324.5,
+          "nodes": [
+            9,
+            26
+          ],
+          "distance_m": 101.0433755561075,
+          "range_margin_m": -1.043375556107506,
+          "source_file": "physics-telemetry.jsonl"
+        },
+        {
+          "time_s": 2325.5,
+          "nodes": [
+            9,
+            26
+          ],
+          "distance_m": 99.34433008578101,
+          "range_margin_m": 0.6556699142189899,
+          "source_file": "physics-telemetry.jsonl"
+        }
+      ],
+      "position_identity_status": "No position sample inside window; brackets only",
+      "hypothesized_component_ids": [
+        2,
+        3,
+        4,
+        5,
+        9,
+        10,
+        11,
+        15,
+        16,
+        17,
+        21,
+        22,
+        23,
+        27,
+        28,
+        29
+      ]
+    }
+  ],
+  "return_climb_observations": [
+    {
+      "time_s": 2260.5,
+      "uav_id": 24,
+      "position_m": [
+        41.94398880004883,
+        9.435108184814453,
+        88.71504974365234
+      ],
+      "velocity_mps": [
+        6.530531209136825e-07,
+        1.495818196417531e-06,
+        3.9836392402648926
+      ],
+      "source_file": "physics-telemetry.jsonl"
+    },
+    {
+      "time_s": 2261.5,
+      "uav_id": 24,
+      "position_m": [
+        41.847408294677734,
+        9.47284984588623,
+        91.61369323730469
+      ],
+      "velocity_mps": [
+        -0.5969750881195068,
+        0.23265579342842102,
+        1.9032347202301025
+      ],
+      "source_file": "physics-telemetry.jsonl"
+    }
+  ],
+  "source_files_sha256": {
+    "manifest.json": "a05b676a2ce4783d2d467800a6a87be4669697d3c3094fd2c5786c107508b25f",
+    "physics-safety.json": "97d1383b78808688b8d344c0c7ab1b42dc831f1420b722850f85945b46a3c28f",
+    "events.json": "89613d94e987dde987c4d6ff9cb12aa763fe5806dad1a00c355ed94f9e629990",
+    "physics-telemetry.jsonl": "1f5d804280b69b5b31c435b908e2083511cb6308d9d5c06b84395c8e45182ef5",
+    "trajectory.jsonl": "a0b368b7cef7c3d43f85ec86f7d85ad96faad501f3b80738cc1d37757fa6db2a"
+  },
+  "limitations": [
+    "Durations are 20 Hz sampled accounting; continuous crossing times lie between samples.",
+    "Trajectory links are from pre-move topology and can lag accompanying positions. Graph diagnosis uses positions.",
+    "No position record occurs inside W5. Exact disconnected identities/critical edge at that time cannot be established.",
+    "Commands, controller integrals and safe-filter interventions are not recorded at these times; exact causal attribution between reference decisions and tracking effects remains a candidate.",
+    "Grounded operational radios are graph intermediates; active denominator is the armed/operational snapshot at each 0.5 s mission interval."
+  ]
+}

@@ -1,0 +1,3 @@
+# Optional headless scene-camera renderer. No physical-flight backend is implied.
+panda3d==1.10.16
+Pillow>=11,<13

@@ -1,0 +1,35 @@
+{
+  "scope": "Exact summary/input/manifest copies; full original traces remain in local ignored evidence folders. Summary copies alone do not permit independent reconstruction of all outcomes.",
+  "records": [
+    {
+      "original_local_path": "submission-artifacts/fleet30-core-20261106/run-summary.json",
+      "saved_copy": "kinematic-core.json",
+      "sha256": "30d1cb75eed9162f9049c9d10aca9c352354ebeb2e3b0d7def25513e6069630a",
+      "bytes": 95415
+    },
+    {
+      "original_local_path": "submission-artifacts/physics-20261106/summary.json",
+      "saved_copy": "compact-physics.json",
+      "sha256": "c3f39217f9ddf308843b450ea4e4216df1e6b8b26d81b20aa735236ac38c96e3",
+      "bytes": 3044
+    },
+    {
+      "original_local_path": "evidence/research-physics-nominal-20261106-01/scenario.json",
+      "saved_copy": "full-nominal-scenario.json",
+      "sha256": "f13e8ada8b804bf2cc4a922b3e5a4d2f45fba8e9c07dcf7541dcb7a0512e231f",
+      "bytes": 2309
+    },
+    {
+      "original_local_path": "evidence/research-physics-nominal-20261106-01/manifest.json",
+      "saved_copy": "full-nominal-manifest.json",
+      "sha256": "a05b676a2ce4783d2d467800a6a87be4669697d3c3094fd2c5786c107508b25f",
+      "bytes": 4644
+    },
+    {
+      "original_local_path": "evidence/research-physics-nominal-20261106-01/metrics.json",
+      "saved_copy": "full-nominal-metrics.json",
+      "sha256": "ac15e2fbeda5922a46ac145f660e1300fa1f85f5ecf75500d439f3955e0b9147",
+      "bytes": 77605
+    }
+  ]
+}

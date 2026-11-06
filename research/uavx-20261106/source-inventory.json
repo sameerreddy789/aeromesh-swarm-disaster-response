@@ -1,0 +1,11 @@
+{
+  "records": 91,
+  "ledgers": {
+    "root-sources.json": 15,
+    "physics-control-sources.json": 32,
+    "swarm-network-sources.json": 28,
+    "visual-demo-sources.json": 16
+  },
+  "unique_ids": 91,
+  "count_is_independent_studies": false
+}

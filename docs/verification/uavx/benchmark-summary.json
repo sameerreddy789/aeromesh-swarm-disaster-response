@@ -1,0 +1,1170 @@
+{
+  "validation_date": "2026-11-05",
+  "scope": "Development benchmarks; abstract kinematics and synthetic observations. Compact summary only; full logs are required for verification.",
+  "base_commit": "0ba914d79dc8223866c3333956c31251f5c5f661",
+  "verifier_sha256": "3885e8436f5956800c11cbcc06fb1a08b2d0f878a8013e0a77ba6eda63adfa59",
+  "runs": [
+    {
+      "run": "partition-fix-nominal-42",
+      "metrics": {
+        "evidence_scope": "abstract kinematic simulation; synthetic PoI observations; not flight qualification",
+        "schema_version": 1,
+        "dt_s": 0.5,
+        "packet_loss_per_attempt": 0.02,
+        "requirements": {
+          "area_width_m": 1000.0,
+          "area_height_m": 1000.0,
+          "mission_duration_s": 2700.0,
+          "max_flight_s": 1200.0,
+          "radio_range_m": 100.0,
+          "max_altitude_m": 100.0,
+          "max_speed_mps": 5.0,
+          "min_separation_m": 20.0,
+          "report_deadline_s": 10.0,
+          "poi_count": 10
+        },
+        "seed": 42,
+        "fleet_size": 30,
+        "disturbance": null,
+        "completion_time_s": 1906.0,
+        "elapsed_time_s": 1906.0,
+        "pois_completed": 10,
+        "pois_total": 10,
+        "priority_weighted_score": 100.0,
+        "packet_statistics": {
+          "packets_sent": 24990,
+          "packets_delivered": 24985,
+          "packets_dropped": 5,
+          "reroute_attempts": 918,
+          "reroutes_found": 913,
+          "successful_recoveries": 842,
+          "ttl_drops": 0,
+          "avg_recovery_latency": 4.026722090261282,
+          "pdr": 0.9997999199679872,
+          "avg_latency": 2.1569341604962977,
+          "avg_hops": 4.189233540124074,
+          "num_nodes": 31,
+          "num_edges": 364
+        },
+        "connectivity_availability_percent": 100.0,
+        "communication_downtime_s": 0.0,
+        "minimum_separation_m": 20.000536623805335,
+        "maximum_speed_mps": 5.000000000000118,
+        "maximum_altitude_m": 97.35287148463817,
+        "maximum_sortie_s": 1013.0,
+        "battery_exhaustions": 0,
+        "collision_count": 0,
+        "separation_violation_steps": 0,
+        "geofence_violation_steps": 0,
+        "relay_assignments": 16,
+        "relay_handoffs_completed": 15,
+        "network_reconfiguration_efficiency": null,
+        "reporting_deadline_misses": [],
+        "tasks": [
+          {
+            "id": 0,
+            "position": [
+              714.4267984578837,
+              -474.98924477733306,
+              0.0
+            ],
+            "spawn_s": 0.0,
+            "priority": 1.0,
+            "detection_s": 199.5,
+            "detected_by": 22,
+            "report_s": 205.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 203.5
+          },
+          {
+            "id": 1,
+            "position": [
+              350.02931836911927,
+              -276.78926185117723,
+              0.0
+            ],
+            "spawn_s": 1341.4599126453816,
+            "priority": 1.0,
+            "detection_s": 1759.5,
+            "detected_by": 15,
+            "report_s": 1762.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1761.5
+          },
+          {
+            "id": 2,
+            "position": [
+              751.6994874229113,
+              392.17956770484545,
+              0.0
+            ],
+            "spawn_s": 211.27356877518412,
+            "priority": 1.0,
+            "detection_s": 669.0,
+            "detected_by": 28,
+            "report_s": 674.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 673.0
+          },
+          {
+            "id": 3,
+            "position": [
+              496.9218196852704,
+              -470.20278056192967,
+              0.0
+            ],
+            "spawn_s": 440.43007615826986,
+            "priority": 1.0,
+            "detection_s": 922.0,
+            "detected_by": 18,
+            "report_s": 927.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 926.0
+          },
+          {
+            "id": 4,
+            "position": [
+              580.3552881033625,
+              -473.46403031613636,
+              0.0
+            ],
+            "spawn_s": 405.9775121947684,
+            "priority": 1.0,
+            "detection_s": 876.5,
+            "detected_by": 18,
+            "report_s": 881.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 880.5
+          },
+          {
+            "id": 5,
+            "position": [
+              724.8844377795232,
+              44.94148060321663,
+              0.0
+            ],
+            "spawn_s": 443.56668235081224,
+            "priority": 1.0,
+            "detection_s": 1063.5,
+            "detected_by": 18,
+            "report_s": 1069.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1067.5
+          },
+          {
+            "id": 6,
+            "position": [
+              664.2656838759087,
+              309.43045667782667,
+              0.0
+            ],
+            "spawn_s": 71.30784183982617,
+            "priority": 1.0,
+            "detection_s": 470.0,
+            "detected_by": 9,
+            "report_s": 474.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 474.0
+          },
+          {
+            "id": 7,
+            "position": [
+              880.8192518328079,
+              198.13939498822685,
+              0.0
+            ],
+            "spawn_s": 652.0358987413059,
+            "priority": 1.0,
+            "detection_s": 1509.0,
+            "detected_by": 25,
+            "report_s": 1516.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1515.0
+          },
+          {
+            "id": 8,
+            "position": [
+              230.47949981178155,
+              457.21307220678125,
+              0.0
+            ],
+            "spawn_s": 645.6745084959706,
+            "priority": 1.0,
+            "detection_s": 1279.0,
+            "detected_by": 6,
+            "report_s": 1282.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1281.0
+          },
+          {
+            "id": 9,
+            "position": [
+              167.7458433801479,
+              -403.283623166536,
+              0.0
+            ],
+            "spawn_s": 1534.64019744458,
+            "priority": 5.0,
+            "detection_s": 1686.5,
+            "detected_by": 15,
+            "report_s": 1690.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1688.5
+          }
+        ],
+        "checks": {
+          "all_pois_surveyed_and_reported": true,
+          "sample_has_ten_pois": true,
+          "all_uavs_landed": true,
+          "mission_deadline": true,
+          "endurance": true,
+          "speed": true,
+          "altitude": true,
+          "separation": true,
+          "geofence": true,
+          "no_battery_exhaustion": true,
+          "continuous_connectivity": true,
+          "reporting_deadline": true
+        },
+        "sample_constraints_passed": true
+      },
+      "manifest": {
+        "schema_version": 1,
+        "python": "3.10.11",
+        "numpy": "1.26.4",
+        "networkx": "3.4.2",
+        "source_sha256": {
+          "simulation/uavx.py": "bda03fd9a43777a0061fb84a171388f77b7004a3e1c80b2c3571e3a1a96b4e78",
+          "core/mission_safety.py": "25b8f8b50baf62de30beaf3aeecdeaebdb33b428a4a37b8b90525b3716d5f61c",
+          "core/models.py": "3d3555c0efb60e5567071886fba5ccb43f9731812cef86f0f1ec33281e19a64c",
+          "core/config.py": "eb0af1755fdf169e9ff6d90a1caf0c3a0b984b9d2c5fa044f0048597f7dff618",
+          "comm/mesh_router.py": "1cfc2ef77b72e29656bc0ef324cb4045f91573f7b82f8724c739235886e5c265",
+          "comm/channel.py": "60c0e281784e9e35259d6116d33c6f296a384b22978d666ed702f21b9a6283b7",
+          "comm/channel_legacy.py": "dae562c24c002974108418b53baa56ba8aed909a997face56fe448e7bd56989c",
+          "run_simulation.py": "e6e4203209cb4e1b0439a6b199a708aee68a6aece49f55f98a9cc25a5976ed06"
+        },
+        "output_sha256": {
+          "connectivity.json": "11d871733c926807fec0864ea5035ba754d50617f1157ecd723bcac82389ebd7",
+          "events.json": "37ea6b5e30371fc67c224b5a120daa2c835b665d811a0346fbf8e62da1ac5ceb",
+          "metrics.json": "fb554da13c50e0e5e4018eb41341c43fe851c217f6165b538b8d5d93c7d977e0",
+          "packets.json": "9515160a2fdd44970734530926bd23ee134392555335dcc3f81a4a456e6376f6",
+          "trajectory.jsonl": "64c85394a9a3fc95c55217769fe0e546767b43ad42d7ae24e7c21356c4493402"
+        }
+      },
+      "verification": {
+        "evidence_errors": [],
+        "failed_constraints": [],
+        "sample_run_passed": true,
+        "submission_ready": false,
+        "note": "Integrity and internal consistency only; not independent full dynamics proof or tamperproof authority. Source hashes must match this checkout. Team details, report/video, official logs and organizer validation remain separate."
+      }
+    },
+    {
+      "run": "partition-fix-nominal-7",
+      "metrics": {
+        "evidence_scope": "abstract kinematic simulation; synthetic PoI observations; not flight qualification",
+        "schema_version": 1,
+        "dt_s": 0.5,
+        "packet_loss_per_attempt": 0.02,
+        "requirements": {
+          "area_width_m": 1000.0,
+          "area_height_m": 1000.0,
+          "mission_duration_s": 2700.0,
+          "max_flight_s": 1200.0,
+          "radio_range_m": 100.0,
+          "max_altitude_m": 100.0,
+          "max_speed_mps": 5.0,
+          "min_separation_m": 20.0,
+          "report_deadline_s": 10.0,
+          "poi_count": 10
+        },
+        "seed": 7,
+        "fleet_size": 30,
+        "disturbance": null,
+        "completion_time_s": 2214.5,
+        "elapsed_time_s": 2214.5,
+        "pois_completed": 10,
+        "pois_total": 10,
+        "priority_weighted_score": 100.0,
+        "packet_statistics": {
+          "packets_sent": 24887,
+          "packets_delivered": 24879,
+          "packets_dropped": 8,
+          "reroute_attempts": 1478,
+          "reroutes_found": 1470,
+          "successful_recoveries": 1420,
+          "ttl_drops": 0,
+          "avg_recovery_latency": 3.952112676056338,
+          "pdr": 0.9996785470325873,
+          "avg_latency": 2.1381486394147675,
+          "avg_hops": 4.133928212548736,
+          "num_nodes": 31,
+          "num_edges": 364
+        },
+        "connectivity_availability_percent": 100.0,
+        "communication_downtime_s": 0.0,
+        "minimum_separation_m": 20.000669076760925,
+        "maximum_speed_mps": 5.000000000000184,
+        "maximum_altitude_m": 90.0,
+        "maximum_sortie_s": 1012.5,
+        "battery_exhaustions": 0,
+        "collision_count": 0,
+        "separation_violation_steps": 0,
+        "geofence_violation_steps": 0,
+        "relay_assignments": 43,
+        "relay_handoffs_completed": 3,
+        "network_reconfiguration_efficiency": null,
+        "reporting_deadline_misses": [],
+        "tasks": [
+          {
+            "id": 0,
+            "position": [
+              398.83276483316234,
+              -349.1508260754981,
+              0.0
+            ],
+            "spawn_s": 0.0,
+            "priority": 1.0,
+            "detection_s": 115.0,
+            "detected_by": 16,
+            "report_s": 118.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 117.0
+          },
+          {
+            "id": 1,
+            "position": [
+              725.9344730398537,
+              -427.56371333245727,
+              0.0
+            ],
+            "spawn_s": 992.4346874936392,
+            "priority": 1.0,
+            "detection_s": 1418.0,
+            "detected_by": 29,
+            "report_s": 1423.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1422.0
+          },
+          {
+            "id": 2,
+            "position": [
+              440.6889169125855,
+              -442.0010752252932,
+              0.0
+            ],
+            "spawn_s": 942.9381757495912,
+            "priority": 1.0,
+            "detection_s": 1217.0,
+            "detected_by": 27,
+            "report_s": 1221.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1221.0
+          },
+          {
+            "id": 3,
+            "position": [
+              112.49565844198489,
+              -66.35431633761414,
+              0.0
+            ],
+            "spawn_s": 181.54843701983697,
+            "priority": 1.0,
+            "detection_s": 210.0,
+            "detected_by": 23,
+            "report_s": 211.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 210.0
+          },
+          {
+            "id": 4,
+            "position": [
+              165.71301334386504,
+              -75.48081085748606,
+              0.0
+            ],
+            "spawn_s": 1498.7226969293463,
+            "priority": 1.0,
+            "detection_s": 1563.5,
+            "detected_by": 12,
+            "report_s": 1565.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1563.5
+          },
+          {
+            "id": 5,
+            "position": [
+              198.8019611496456,
+              -276.7610353929855,
+              0.0
+            ],
+            "spawn_s": 1151.7338069857253,
+            "priority": 1.0,
+            "detection_s": 1512.0,
+            "detected_by": 28,
+            "report_s": 1514.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1514.0
+          },
+          {
+            "id": 6,
+            "position": [
+              1022.7089424570056,
+              77.10294861749867,
+              0.0
+            ],
+            "spawn_s": 750.2240258923574,
+            "priority": 1.0,
+            "detection_s": 985.5,
+            "detected_by": 20,
+            "report_s": 991.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 991.5
+          },
+          {
+            "id": 7,
+            "position": [
+              1051.25510559292,
+              -453.4173193822437,
+              0.0
+            ],
+            "spawn_s": 1553.7351187447023,
+            "priority": 1.0,
+            "detection_s": 1926.0,
+            "detected_by": 8,
+            "report_s": 1933.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1932.0
+          },
+          {
+            "id": 8,
+            "position": [
+              364.6092863316763,
+              -355.74491664256243,
+              0.0
+            ],
+            "spawn_s": 264.95849425636095,
+            "priority": 1.0,
+            "detection_s": 685.5,
+            "detected_by": 5,
+            "report_s": 689.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 687.5
+          },
+          {
+            "id": 9,
+            "position": [
+              383.48182410193436,
+              316.12635912003145,
+              0.0
+            ],
+            "spawn_s": 374.4639010676512,
+            "priority": 5.0,
+            "detection_s": 510.5,
+            "detected_by": 29,
+            "report_s": 513.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 512.5
+          }
+        ],
+        "checks": {
+          "all_pois_surveyed_and_reported": true,
+          "sample_has_ten_pois": true,
+          "all_uavs_landed": true,
+          "mission_deadline": true,
+          "endurance": true,
+          "speed": true,
+          "altitude": true,
+          "separation": true,
+          "geofence": true,
+          "no_battery_exhaustion": true,
+          "continuous_connectivity": true,
+          "reporting_deadline": true
+        },
+        "sample_constraints_passed": true
+      },
+      "manifest": {
+        "schema_version": 1,
+        "python": "3.10.11",
+        "numpy": "1.26.4",
+        "networkx": "3.4.2",
+        "source_sha256": {
+          "simulation/uavx.py": "bda03fd9a43777a0061fb84a171388f77b7004a3e1c80b2c3571e3a1a96b4e78",
+          "core/mission_safety.py": "25b8f8b50baf62de30beaf3aeecdeaebdb33b428a4a37b8b90525b3716d5f61c",
+          "core/models.py": "3d3555c0efb60e5567071886fba5ccb43f9731812cef86f0f1ec33281e19a64c",
+          "core/config.py": "eb0af1755fdf169e9ff6d90a1caf0c3a0b984b9d2c5fa044f0048597f7dff618",
+          "comm/mesh_router.py": "1cfc2ef77b72e29656bc0ef324cb4045f91573f7b82f8724c739235886e5c265",
+          "comm/channel.py": "60c0e281784e9e35259d6116d33c6f296a384b22978d666ed702f21b9a6283b7",
+          "comm/channel_legacy.py": "dae562c24c002974108418b53baa56ba8aed909a997face56fe448e7bd56989c",
+          "run_simulation.py": "e6e4203209cb4e1b0439a6b199a708aee68a6aece49f55f98a9cc25a5976ed06"
+        },
+        "output_sha256": {
+          "connectivity.json": "5e7e2c7819d93248419ed88636e0bbf5e194d83c967749c189fd8665bd712466",
+          "events.json": "c52ae8d9020e40c7ac6c799c62d4fbd2bea9bf57827f95852b85ac225033db4e",
+          "metrics.json": "1597849dd10e8f4d174f4b44cbce218f542c2109108619eb69cb30a7a8661fd6",
+          "packets.json": "e6bff6bd0c5916a46a2b2a57527352a4919659225dd1087f612b33e6f7991dd8",
+          "trajectory.jsonl": "368ac0226362dc6779f14d3b6c74a3ff856ec6210496731f6ae62a51c37d7466"
+        }
+      },
+      "verification": {
+        "evidence_errors": [],
+        "failed_constraints": [],
+        "sample_run_passed": true,
+        "submission_ready": false,
+        "note": "Integrity and internal consistency only; not independent full dynamics proof or tamperproof authority. Source hashes must match this checkout. Team details, report/video, official logs and organizer validation remain separate."
+      }
+    },
+    {
+      "run": "partition-fix-outage-42",
+      "metrics": {
+        "evidence_scope": "abstract kinematic simulation; synthetic PoI observations; not flight qualification",
+        "schema_version": 1,
+        "dt_s": 0.5,
+        "packet_loss_per_attempt": 0.02,
+        "requirements": {
+          "area_width_m": 1000.0,
+          "area_height_m": 1000.0,
+          "mission_duration_s": 2700.0,
+          "max_flight_s": 1200.0,
+          "radio_range_m": 100.0,
+          "max_altitude_m": 100.0,
+          "max_speed_mps": 5.0,
+          "min_separation_m": 20.0,
+          "report_deadline_s": 10.0,
+          "poi_count": 10
+        },
+        "seed": 42,
+        "fleet_size": 30,
+        "disturbance": {
+          "type": "outage",
+          "time_s": 900.0,
+          "uav_id": 10,
+          "affected": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            9,
+            12,
+            13,
+            16,
+            17,
+            18,
+            22,
+            23,
+            27,
+            28
+          ],
+          "recovered_s": 908.0,
+          "delivered_after": [
+            2,
+            4,
+            22,
+            17,
+            1,
+            7,
+            0,
+            13,
+            23,
+            6,
+            12,
+            18,
+            3,
+            16,
+            27,
+            9,
+            28
+          ]
+        },
+        "completion_time_s": 1906.0,
+        "elapsed_time_s": 1906.0,
+        "pois_completed": 10,
+        "pois_total": 10,
+        "priority_weighted_score": 100.0,
+        "packet_statistics": {
+          "packets_sent": 24990,
+          "packets_delivered": 24926,
+          "packets_dropped": 64,
+          "reroute_attempts": 920,
+          "reroutes_found": 906,
+          "successful_recoveries": 835,
+          "ttl_drops": 0,
+          "avg_recovery_latency": 4.020359281437126,
+          "pdr": 0.9974389755902361,
+          "avg_latency": 2.1577268715397575,
+          "avg_hops": 4.19108561341571,
+          "num_nodes": 31,
+          "num_edges": 364
+        },
+        "connectivity_availability_percent": 98.42478340771856,
+        "communication_downtime_s": 30.0,
+        "minimum_separation_m": 20.000536623805335,
+        "maximum_speed_mps": 5.000000000000118,
+        "maximum_altitude_m": 97.35287148463817,
+        "maximum_sortie_s": 1013.0,
+        "battery_exhaustions": 0,
+        "collision_count": 0,
+        "separation_violation_steps": 0,
+        "geofence_violation_steps": 0,
+        "relay_assignments": 16,
+        "relay_handoffs_completed": 15,
+        "network_reconfiguration_efficiency": null,
+        "reporting_deadline_misses": [],
+        "tasks": [
+          {
+            "id": 0,
+            "position": [
+              714.4267984578837,
+              -474.98924477733306,
+              0.0
+            ],
+            "spawn_s": 0.0,
+            "priority": 1.0,
+            "detection_s": 199.5,
+            "detected_by": 22,
+            "report_s": 205.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 203.5
+          },
+          {
+            "id": 1,
+            "position": [
+              350.02931836911927,
+              -276.78926185117723,
+              0.0
+            ],
+            "spawn_s": 1341.4599126453816,
+            "priority": 1.0,
+            "detection_s": 1759.5,
+            "detected_by": 15,
+            "report_s": 1762.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1761.5
+          },
+          {
+            "id": 2,
+            "position": [
+              751.6994874229113,
+              392.17956770484545,
+              0.0
+            ],
+            "spawn_s": 211.27356877518412,
+            "priority": 1.0,
+            "detection_s": 669.0,
+            "detected_by": 28,
+            "report_s": 674.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 673.0
+          },
+          {
+            "id": 3,
+            "position": [
+              496.9218196852704,
+              -470.20278056192967,
+              0.0
+            ],
+            "spawn_s": 440.43007615826986,
+            "priority": 1.0,
+            "detection_s": 922.0,
+            "detected_by": 18,
+            "report_s": 926.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 926.0
+          },
+          {
+            "id": 4,
+            "position": [
+              580.3552881033625,
+              -473.46403031613636,
+              0.0
+            ],
+            "spawn_s": 405.9775121947684,
+            "priority": 1.0,
+            "detection_s": 876.5,
+            "detected_by": 18,
+            "report_s": 881.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 880.5
+          },
+          {
+            "id": 5,
+            "position": [
+              724.8844377795232,
+              44.94148060321663,
+              0.0
+            ],
+            "spawn_s": 443.56668235081224,
+            "priority": 1.0,
+            "detection_s": 1063.5,
+            "detected_by": 18,
+            "report_s": 1068.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1067.5
+          },
+          {
+            "id": 6,
+            "position": [
+              664.2656838759087,
+              309.43045667782667,
+              0.0
+            ],
+            "spawn_s": 71.30784183982617,
+            "priority": 1.0,
+            "detection_s": 470.0,
+            "detected_by": 9,
+            "report_s": 474.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 474.0
+          },
+          {
+            "id": 7,
+            "position": [
+              880.8192518328079,
+              198.13939498822685,
+              0.0
+            ],
+            "spawn_s": 652.0358987413059,
+            "priority": 1.0,
+            "detection_s": 1509.0,
+            "detected_by": 25,
+            "report_s": 1516.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1515.0
+          },
+          {
+            "id": 8,
+            "position": [
+              230.47949981178155,
+              457.21307220678125,
+              0.0
+            ],
+            "spawn_s": 645.6745084959706,
+            "priority": 1.0,
+            "detection_s": 1279.0,
+            "detected_by": 6,
+            "report_s": 1282.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1281.0
+          },
+          {
+            "id": 9,
+            "position": [
+              167.7458433801479,
+              -403.283623166536,
+              0.0
+            ],
+            "spawn_s": 1534.64019744458,
+            "priority": 5.0,
+            "detection_s": 1686.5,
+            "detected_by": 15,
+            "report_s": 1690.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1688.5
+          }
+        ],
+        "checks": {
+          "all_pois_surveyed_and_reported": true,
+          "sample_has_ten_pois": true,
+          "all_uavs_landed": true,
+          "mission_deadline": true,
+          "endurance": true,
+          "speed": true,
+          "altitude": true,
+          "separation": true,
+          "geofence": true,
+          "no_battery_exhaustion": true,
+          "continuous_connectivity": false,
+          "reporting_deadline": true
+        },
+        "sample_constraints_passed": false
+      },
+      "manifest": {
+        "schema_version": 1,
+        "python": "3.10.11",
+        "numpy": "1.26.4",
+        "networkx": "3.4.2",
+        "source_sha256": {
+          "simulation/uavx.py": "bda03fd9a43777a0061fb84a171388f77b7004a3e1c80b2c3571e3a1a96b4e78",
+          "core/mission_safety.py": "25b8f8b50baf62de30beaf3aeecdeaebdb33b428a4a37b8b90525b3716d5f61c",
+          "core/models.py": "3d3555c0efb60e5567071886fba5ccb43f9731812cef86f0f1ec33281e19a64c",
+          "core/config.py": "eb0af1755fdf169e9ff6d90a1caf0c3a0b984b9d2c5fa044f0048597f7dff618",
+          "comm/mesh_router.py": "1cfc2ef77b72e29656bc0ef324cb4045f91573f7b82f8724c739235886e5c265",
+          "comm/channel.py": "60c0e281784e9e35259d6116d33c6f296a384b22978d666ed702f21b9a6283b7",
+          "comm/channel_legacy.py": "dae562c24c002974108418b53baa56ba8aed909a997face56fe448e7bd56989c",
+          "run_simulation.py": "e6e4203209cb4e1b0439a6b199a708aee68a6aece49f55f98a9cc25a5976ed06"
+        },
+        "output_sha256": {
+          "connectivity.json": "d8dad7c148bba5aee7271d18540c33fc914dc647a49f0cce857f7e1070aee5bd",
+          "events.json": "26f1978dceaa45e83a3984f58261ca4261f9f9699c3c0db3bfd53bb358efaf56",
+          "metrics.json": "5af2946ae11df89548982c6db8a1741743a3d563a8f949f0b62882984f076dea",
+          "packets.json": "1f09bb93e6e6b52f6e46a5b0303cce78eaafe5a24fec5534aa948ebdcdfd240b",
+          "trajectory.jsonl": "54d7b1c6e13a49565134079a0eb267cb7aaaaea541df3095e8a909b495848352"
+        }
+      },
+      "verification": {
+        "evidence_errors": [],
+        "failed_constraints": [
+          "continuous_connectivity"
+        ],
+        "sample_run_passed": false,
+        "submission_ready": false,
+        "note": "Integrity and internal consistency only; not independent full dynamics proof or tamperproof authority. Source hashes must match this checkout. Team details, report/video, official logs and organizer validation remain separate."
+      }
+    },
+    {
+      "run": "partition-fix-failure-42",
+      "metrics": {
+        "evidence_scope": "abstract kinematic simulation; synthetic PoI observations; not flight qualification",
+        "schema_version": 1,
+        "dt_s": 0.5,
+        "packet_loss_per_attempt": 0.02,
+        "requirements": {
+          "area_width_m": 1000.0,
+          "area_height_m": 1000.0,
+          "mission_duration_s": 2700.0,
+          "max_flight_s": 1200.0,
+          "radio_range_m": 100.0,
+          "max_altitude_m": 100.0,
+          "max_speed_mps": 5.0,
+          "min_separation_m": 20.0,
+          "report_deadline_s": 10.0,
+          "poi_count": 10
+        },
+        "seed": 42,
+        "fleet_size": 30,
+        "disturbance": {
+          "type": "failure",
+          "time_s": 900.0,
+          "uav_id": 10,
+          "affected": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            6,
+            7,
+            9,
+            12,
+            13,
+            16,
+            17,
+            18,
+            22,
+            23,
+            27,
+            28
+          ],
+          "recovered_s": 908.0,
+          "delivered_after": [
+            2,
+            4,
+            22,
+            17,
+            1,
+            7,
+            0,
+            13,
+            23,
+            6,
+            12,
+            18,
+            3,
+            16,
+            27,
+            9,
+            28
+          ]
+        },
+        "completion_time_s": null,
+        "elapsed_time_s": 2700.0,
+        "pois_completed": 10,
+        "pois_total": 10,
+        "priority_weighted_score": 100.0,
+        "packet_statistics": {
+          "packets_sent": 24946,
+          "packets_delivered": 24912,
+          "packets_dropped": 34,
+          "reroute_attempts": 921,
+          "reroutes_found": 909,
+          "successful_recoveries": 842,
+          "ttl_drops": 0,
+          "avg_recovery_latency": 4.01603325415677,
+          "pdr": 0.9986370560410487,
+          "avg_latency": 2.1589193962748876,
+          "avg_hops": 4.193280346820809,
+          "num_nodes": 30,
+          "num_edges": 339
+        },
+        "connectivity_availability_percent": 99.83454228446779,
+        "communication_downtime_s": 3.1511421923108913,
+        "minimum_separation_m": 20.000536623805335,
+        "maximum_speed_mps": 5.000000000000118,
+        "maximum_altitude_m": 97.35287148463817,
+        "maximum_sortie_s": 1013.5,
+        "battery_exhaustions": 0,
+        "collision_count": 0,
+        "separation_violation_steps": 0,
+        "geofence_violation_steps": 0,
+        "relay_assignments": 16,
+        "relay_handoffs_completed": 15,
+        "network_reconfiguration_efficiency": null,
+        "reporting_deadline_misses": [],
+        "tasks": [
+          {
+            "id": 0,
+            "position": [
+              714.4267984578837,
+              -474.98924477733306,
+              0.0
+            ],
+            "spawn_s": 0.0,
+            "priority": 1.0,
+            "detection_s": 199.5,
+            "detected_by": 22,
+            "report_s": 205.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 203.5
+          },
+          {
+            "id": 1,
+            "position": [
+              350.02931836911927,
+              -276.78926185117723,
+              0.0
+            ],
+            "spawn_s": 1341.4599126453816,
+            "priority": 1.0,
+            "detection_s": 1759.5,
+            "detected_by": 15,
+            "report_s": 1762.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1761.5
+          },
+          {
+            "id": 2,
+            "position": [
+              751.6994874229113,
+              392.17956770484545,
+              0.0
+            ],
+            "spawn_s": 211.27356877518412,
+            "priority": 1.0,
+            "detection_s": 669.0,
+            "detected_by": 28,
+            "report_s": 674.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 673.0
+          },
+          {
+            "id": 3,
+            "position": [
+              496.9218196852704,
+              -470.20278056192967,
+              0.0
+            ],
+            "spawn_s": 440.43007615826986,
+            "priority": 1.0,
+            "detection_s": 922.0,
+            "detected_by": 18,
+            "report_s": 926.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 926.0
+          },
+          {
+            "id": 4,
+            "position": [
+              580.3552881033625,
+              -473.46403031613636,
+              0.0
+            ],
+            "spawn_s": 405.9775121947684,
+            "priority": 1.0,
+            "detection_s": 876.5,
+            "detected_by": 18,
+            "report_s": 881.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 880.5
+          },
+          {
+            "id": 5,
+            "position": [
+              724.8844377795232,
+              44.94148060321663,
+              0.0
+            ],
+            "spawn_s": 443.56668235081224,
+            "priority": 1.0,
+            "detection_s": 1063.5,
+            "detected_by": 18,
+            "report_s": 1068.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1067.5
+          },
+          {
+            "id": 6,
+            "position": [
+              664.2656838759087,
+              309.43045667782667,
+              0.0
+            ],
+            "spawn_s": 71.30784183982617,
+            "priority": 1.0,
+            "detection_s": 470.0,
+            "detected_by": 9,
+            "report_s": 474.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 474.0
+          },
+          {
+            "id": 7,
+            "position": [
+              880.8192518328079,
+              198.13939498822685,
+              0.0
+            ],
+            "spawn_s": 652.0358987413059,
+            "priority": 1.0,
+            "detection_s": 1509.0,
+            "detected_by": 25,
+            "report_s": 1516.0,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1515.0
+          },
+          {
+            "id": 8,
+            "position": [
+              230.47949981178155,
+              457.21307220678125,
+              0.0
+            ],
+            "spawn_s": 645.6745084959706,
+            "priority": 1.0,
+            "detection_s": 1279.0,
+            "detected_by": 6,
+            "report_s": 1282.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1281.0
+          },
+          {
+            "id": 9,
+            "position": [
+              167.7458433801479,
+              -403.283623166536,
+              0.0
+            ],
+            "spawn_s": 1534.64019744458,
+            "priority": 5.0,
+            "detection_s": 1686.5,
+            "detected_by": 15,
+            "report_s": 1689.5,
+            "surveyed": true,
+            "dwell_s": 30.0,
+            "last_report_attempt_s": 1688.5
+          }
+        ],
+        "checks": {
+          "all_pois_surveyed_and_reported": true,
+          "sample_has_ten_pois": true,
+          "all_uavs_landed": false,
+          "mission_deadline": false,
+          "endurance": true,
+          "speed": true,
+          "altitude": true,
+          "separation": true,
+          "geofence": true,
+          "no_battery_exhaustion": true,
+          "continuous_connectivity": false,
+          "reporting_deadline": true
+        },
+        "sample_constraints_passed": false
+      },
+      "manifest": {
+        "schema_version": 1,
+        "python": "3.10.11",
+        "numpy": "1.26.4",
+        "networkx": "3.4.2",
+        "source_sha256": {
+          "simulation/uavx.py": "bda03fd9a43777a0061fb84a171388f77b7004a3e1c80b2c3571e3a1a96b4e78",
+          "core/mission_safety.py": "25b8f8b50baf62de30beaf3aeecdeaebdb33b428a4a37b8b90525b3716d5f61c",
+          "core/models.py": "3d3555c0efb60e5567071886fba5ccb43f9731812cef86f0f1ec33281e19a64c",
+          "core/config.py": "eb0af1755fdf169e9ff6d90a1caf0c3a0b984b9d2c5fa044f0048597f7dff618",
+          "comm/mesh_router.py": "1cfc2ef77b72e29656bc0ef324cb4045f91573f7b82f8724c739235886e5c265",
+          "comm/channel.py": "60c0e281784e9e35259d6116d33c6f296a384b22978d666ed702f21b9a6283b7",
+          "comm/channel_legacy.py": "dae562c24c002974108418b53baa56ba8aed909a997face56fe448e7bd56989c",
+          "run_simulation.py": "e6e4203209cb4e1b0439a6b199a708aee68a6aece49f55f98a9cc25a5976ed06"
+        },
+        "output_sha256": {
+          "connectivity.json": "d9de09417301af4b308a19d8b40f1e2c35a2b3ab98f0569ef25bfe970fe27e1f",
+          "events.json": "d70ffc83a41527533f132b43337de75e87187115421e892f8257b8d3c76a7ae2",
+          "metrics.json": "9b313dcf9165a210c285d715da2964c0433912a170cf27e56ae182d76a583c12",
+          "packets.json": "eecba175128e2077c356176bbaaedff386a97e9434d73ee6bf2b323cf471d931",
+          "trajectory.jsonl": "1329a36e02f0d67532a4012ff05dd9072cdbd03425baae47fcfec7abbe874fd0"
+        }
+      },
+      "verification": {
+        "evidence_errors": [],
+        "failed_constraints": [
+          "all_uavs_landed",
+          "mission_deadline",
+          "continuous_connectivity"
+        ],
+        "sample_run_passed": false,
+        "submission_ready": false,
+        "note": "Integrity and internal consistency only; not independent full dynamics proof or tamperproof authority. Source hashes must match this checkout. Team details, report/video, official logs and organizer validation remain separate."
+      }
+    }
+  ],
+  "regression_suite": {
+    "passed": 167,
+    "failed": 0,
+    "duration_s": 10.68,
+    "new_verifier_regressions": 29,
+    "command": ".venv\\Scripts\\python.exe -m pytest tests/test_mission_safety.py tests/test_uavx_profile.py tests/test_packet_evidence.py tests/test_evidence_metrics.py tests/test_submission_verifier.py tests/test_comm.py tests/test_route_recovery.py tests/test_interference.py tests/test_simulation.py -q --disable-warnings",
+    "new_partition_regressions": 3
+  },
+  "change": "Recover on loss of a GCS path even when a disconnected group retains local neighbors. Full-run metrics unchanged versus the preserved baseline.",
+  "preserved_baseline_commit": "72f764f8805b6fa9fd89b63ce0b027fef4fdf2b2"
+}

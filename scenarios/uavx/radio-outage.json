@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "seed": 42,
+  "fleet_size": 30,
+  "packet_loss": 0.02,
+  "relay_protection": true,
+  "radio_bytes_per_s": 131072,
+  "radio_queue_bytes": 1048576,
+  "recharge_s": 720,
+  "charging_pads": 30,
+  "staging_columns": 6,
+  "pad_spacing_m": 25,
+  "camera_mode": "panda3d",
+  "camera_width": 128,
+  "camera_height": 128,
+  "tasks": null,
+  "faults": [
+    {"kind": "radio_outage", "time_s": 900, "target": "middle_active_relay", "duration_s": 30}
+  ]
+}

@@ -1,5 +1,7 @@
 """Integration SITL test — runs run_simulation.py --sitl --dry-run --duration 3."""
-import subprocess, os, pytest
+import subprocess, os, sys, pytest
+
+pytestmark = pytest.mark.skipif(os.environ.get("AEROMESH_RUN_SITL_TESTS") != "1", reason="SITL smoke test requires explicit opt-in and a prepared simulator")
 
 
 @pytest.mark.skipif(
@@ -9,7 +11,7 @@ import subprocess, os, pytest
 def test_sitl_exit_and_audit():
     """Run the simulation dry-run and verify exit, audit log, and dashboard."""
     result = subprocess.run(
-        ["python", "run_simulation.py", "--sitl", "--dry-run", "--duration", "3", "--drone-id", "1"],
+        [sys.executable, "run_hardware.py", "--sitl", "--dry-run", "--duration", "3", "--drone-id", "1"],
         capture_output=True, timeout=15, text=True
     )
     assert result.returncode == 0, f"Expected exit 0, got {result.returncode}"

@@ -1,0 +1,22 @@
+Captured from the prior test run's tool output; this is a handoff transcription, not a new test execution.
+
+Working directory: D:\Hackathons\Projects\Web Dev\New\AeroMesh-UAVX
+Original command:
+.venv\Scripts\python.exe -B -m pytest tests/test_quadrotor_physics.py tests/test_physics_uavx.py tests/test_physics_verifier.py -q -p no:cacheprovider
+
+Original command session: 47067
+Observed completion output:
+..........................................                  [100%]
+55 passed in 13.13s
+
+The first yielded output contained 13 progress dots; the final yielded output above contained the remaining 42 dots.
+Observed process exit code: 0
+Counts: 15 engine tests, 9 mission-adapter tests, 31 verifier tests.
+
+Source hashes inspected immediately after the prior run:
+verify_physics.py: b037e63bd3ea451a75778e7ef85ea286aff4b6140cb89149c70c5b5a2e6636d9
+simulation/quadrotor_physics.py: b81c3003f0a3845c17f3779d5396f422f37204ad56a9296138490a44dcc61074
+simulation/physics_uavx.py: 0b8085967e602f8a6ca5f37a7c35bcf9ebb22d1ccdc96f07fc6186bf7f675343
+tests/test_physics_verifier.py: 80688d2e72bb1c457566bf925968929f1dc916a388c5cc660ce2ca1667de8f57
+
+Scope: declared-model engine, adapter contracts, and evidence-integrity regressions. This test run is not full-mission or physical-airframe qualification.

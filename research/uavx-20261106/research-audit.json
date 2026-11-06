@@ -1,0 +1,15 @@
+{
+  "scope": "Research syntax, local links, citation IDs, study counts and source hashes; not scientific peer review or mission qualification",
+  "source_records": 91,
+  "python_files": 10,
+  "json_files": 22,
+  "jsonl_rows": 320,
+  "local_links": 201,
+  "studies": {
+    "radio-sensitivity-01": 240,
+    "radio-feedback-01": 80
+  },
+  "errors": [],
+  "warnings": [],
+  "passed": true
+}

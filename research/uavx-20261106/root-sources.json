@@ -1,0 +1,255 @@
+[
+  {
+    "id": "R01",
+    "title": "UAV-X: Resilient BVLOS Swarm Challenge, supplied problem statement",
+    "author_org": "Techfest IIT Bombay / PUSHPAK Grand Challenge",
+    "url": "https://techfest.org/competitions/uav-x",
+    "local_file": "C:/Users/samee/Downloads/UAV-X__Resilient_BVLOS_Swarm_Challenge_1_compressed.pdf",
+    "pages_used": [
+      3,
+      4,
+      5,
+      8
+    ],
+    "access": "Full supplied PDF read with pypdf; official live page separately corroborated",
+    "claims": [
+      "Objective requires mission completion, communication-aware roles and recovery",
+      "Six rubric weights25,25,20,15,10,5 percent",
+      "Equivalent open-source simulators permitted",
+      "Stage2 standardized logs promised but not provided to us"
+    ],
+    "authority": "Governing supplied document",
+    "limits": "Does not provide advanced scenario/log schema or resource acceptance; date/version changes possible",
+    "retrieved_utc": "2026-11-06T02:36:21.295058+00:00",
+    "sha256": "9b56bd9055a771bd684e92180beb9626b960ef6d4a3fc80e83c6cfe20e5f63e5"
+  },
+  {
+    "id": "R02",
+    "title": "UAV-X competition page",
+    "author_org": "Techfest IIT Bombay",
+    "url": "https://techfest.org/competitions/uav-x",
+    "access": "Full page via Jina Reader",
+    "claims": [
+      "Simulation-first: no physical drones needed",
+      "Stage3 unseen scenario and jury presentation",
+      "Registration closed",
+      "Forms URL conflicts with email-only rules and FAQ",
+      "Calls criteria seven while enumerating six weights totaling100"
+    ],
+    "authority": "Official public page",
+    "limits": "Internal contradictions; does not supersede specific supplied problem statement by inference",
+    "retrieved_utc": "2026-11-06T02:36:21.296060+00:00"
+  },
+  {
+    "id": "R03",
+    "title": "Standard Test Methods for Response Robots",
+    "author_org": "NIST",
+    "url": "https://www.nist.gov/el/intelligent-systems-division-73500/standard-test-methods-response-robots",
+    "published": "2016-11-08",
+    "updated": "2024-08-16",
+    "access": "Full webpage via Jina Reader",
+    "claims": [
+      "Capability-specific repeatable tests quantify mobility,sensors,energy,communications,operator proficiency,logistics,safety",
+      "Statistically significant comparisons guide understanding deployment capabilities",
+      "Ground,aerial,aquatic response robots included"
+    ],
+    "authority": "Government research program",
+    "limits": "Guidance for benchmark design; AeroMesh has not performed or been certified under NIST/ASTM tests",
+    "retrieved_utc": "2026-11-06T02:36:21.296060+00:00"
+  },
+  {
+    "id": "R04",
+    "title": "7.2.4.1 Confidence intervals",
+    "author_org": "NIST/SEMATECH e-Handbook of Statistical Methods",
+    "url": "https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm",
+    "access": "Full webpage via Jina Reader",
+    "claims": [
+      "Wilson intervals avoid zero-width all-success intervals",
+      "Exact binomial intervals appropriate for small failure counts/sample sizes"
+    ],
+    "authority": "Technical statistical reference",
+    "limits": "Requires a defined sampling process; mixed adversarial scenario suite is not an IID population estimate",
+    "retrieved_utc": "2026-11-06T02:36:21.296060+00:00"
+  },
+  {
+    "id": "R05",
+    "title": "UAV-X Stage1 technical proposal template",
+    "author_org": "Supplied organizer template",
+    "url": null,
+    "local_file": "C:/Users/samee/Downloads/Report Template  - Grand challenge 1.pdf",
+    "pages_used": [
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "access": "Full supplied PDF read",
+    "claims": [
+      "Centralized,decentralized or hybrid autonomy allowed with justification",
+      "Communication is the heart of challenge",
+      "Report standard baselines,novelty,metrics with scenario provenance and exact reproducibility",
+      "6\u20138 pages and demo link required"
+    ],
+    "authority": "Governing supplied template",
+    "limits": "Template is Stage1; no evidence of Stage2 acceptance or official log format",
+    "retrieved_utc": "2026-11-06T02:36:21.296060+00:00",
+    "sha256": "084ae73bf83b7d230dd275ae422d0f2a1110d580e4985b0601bad459a24bae83"
+  },
+  {
+    "id": "R06",
+    "title": "Sample scenario for GC 1",
+    "author_org": "Supplied organizer scenario slide",
+    "url": null,
+    "local_file": "C:/Users/samee/Downloads/sample scenario for GC 1.pptx",
+    "slides_used": [1],
+    "access": "Full slide text extracted from PPTX XML; geometry diagram previously inspected",
+    "claims": [
+      "45-minute mission and 20-minute maximum flight; 100 m communication range",
+      "1000 by 1000 m operational area; ten PoIs with random positions and emergence times",
+      "All UAVs launch at operational center and land at start area by 45 minutes",
+      "Maximum 100 m height and 5 m/s speed; minimum 20 m separation; report within 10 seconds of detection"
+    ],
+    "authority": "Supplied sample scenario",
+    "limits": "No advanced hidden scenarios/log schema; announced versus sensor-discovered PoIs not explicit",
+    "sha256": "fdae2c88725f13e1d3cba51092093698f02c5347391d7dce46a5e6353cb9aa7b"
+  },
+  {
+    "id": "R07",
+    "title": "NASA-STD-7009B: Standard for Models and Simulations",
+    "author_org": "NASA",
+    "url": "https://standards.nasa.gov/standard/NASA/NASA-STD-7009",
+    "document_url": "https://standards.nasa.gov/sites/default/files/standards/NASA/B/1/NASA-STD-7009B-Final-3-5-2024.pdf",
+    "published": "2024-03-05",
+    "access": "Official PDF downloaded and full text extracted; selected sections read",
+    "pages_used": [16,17,20,21,22,23,24,25,28,29,30,31,32,33],
+    "claims": [
+      "Distinguishes verification from validation against referents",
+      "Requires explicit intended use, assumptions, limitations, units, parameter pedigree, numerical error and uncertainty handling"
+    ],
+    "authority": "Government technical standard",
+    "limits": "Selected principles inform research; no claim of NASA compliance or certification"
+  },
+  {
+    "id": "R08",
+    "title": "Aerial Drone Tests: Simulation Models",
+    "author_org": "NIST",
+    "url": "https://www.nist.gov/el/intelligent-systems-division-73500/standard-test-methods-response-robots/aerial-drone-tests-8",
+    "access": "Full official webpage read via Jina Reader",
+    "claims": [
+      "Offers OBJ/MTL/textures for response-drone test apparatuses",
+      "Simulation practice complements and does not replace testing with real sUAS"
+    ],
+    "authority": "Government research program",
+    "limits": "Assets not downloaded; not an AeroMesh/NIST certification"
+  },
+  {
+    "id": "R09",
+    "title": "ROS 2 Jazzy Quality of Service settings",
+    "author_org": "Open Robotics / ROS 2 documentation contributors",
+    "url": "https://github.com/ros2/ros2_documentation/blob/929e37c4c6d0746e75d10f1fd76f024743ff75ea/source/Concepts/Intermediate/About-Quality-of-Service-Settings.rst",
+    "access": "Official GitHub RST source read using gh api; documentation website presented an Anubis challenge",
+    "revision": "929e37c4c6d0746e75d10f1fd76f024743ff75ea",
+    "locators": ["QoS policies", "QoS profiles", "QoS compatibilities"],
+    "claims": [
+      "Deadline, lifespan, liveliness and reliability are distinct policies",
+      "Sensor profile prioritizes timely observations with best-effort small queues",
+      "Incompatible publisher/subscriber QoS may prevent communication"
+    ],
+    "authority": "Official middleware documentation",
+    "limits": "AeroMesh physics mission does not currently use ROS 2 transport; recommend semantic reuse, not automatic migration"
+  },
+  {
+    "id": "R10",
+    "title": "RACER: Rapid Collaborative Exploration with a Decentralized Multi-UAV System",
+    "author_org": "Boyu Zhou, Hao Xu, Shaojie Shen",
+    "url": "https://arxiv.org/html/2209.08533v1",
+    "published": "2022-09-18",
+    "access": "Full HTML retrieved; Introduction, system overview, implementation details and selected evaluation sections read",
+    "locators": ["Abstract", "I Introduction", "II Related Work", "III System Overview", "VII Implementation Details", "VIII-A", "VIII-D", "VIII-E", "VIII-F"],
+    "claims": [
+      "Pairwise asynchronous region allocation, hgrid partitioning and CVRP workload balancing",
+      "Explicit decentralized onboard state estimation, mapping, coordination and planning distinction",
+      "Hierarchical frontier/viewpoint/trajectory planner for unknown-space exploration"
+    ],
+    "authority": "Primary robotics paper, author preprint",
+    "limits": "Unknown-space mapping objective differs from all-active-to-GCS connectivity, 100 m links, 20 m separation, 1200 s sortie and 10 s reporting constraints; physical examples use 2 or 3 UAVs at 1 to 1.5 m/s and smaller environments; results do not transfer automatically"
+  },
+  {
+    "id": "R11",
+    "title": "Multi-robot Learning-based Informative Path Planning Using Spatio-Temporal Gaussian Process Kalman Filter",
+    "author_org": "Muqing Cao, Yunwoo Lee, Junbin Yuan, Lorenzo Schenk, Sebastian Scherer",
+    "url": "https://arxiv.org/html/2609.05515v2",
+    "published": "2026-10-27 (v2); accepted 2026-10-12 per manuscript",
+    "access": "Full HTML retrieved; introduction, problem formulation, camera model and evaluation/limitations sections read",
+    "locators": ["I", "III", "IV-B", "VI-C", "VI-D", "VI-E", "VI-F", "VII", "VIII"],
+    "claims": [
+      "Footprint-level measurements and compact local belief fusion distinguish received and centralized reference information",
+      "Posterior uncertainty is self-reported and not an accuracy measure; independent visit counts are also evaluated",
+      "Sensing representation and policy are separately ablated",
+      "Two-UAV field run is explicitly a feasibility demonstration without a controlled field baseline"
+    ],
+    "authority": "Primary robotics paper, author manuscript reporting RA-L acceptance",
+    "limits": "Persistent monitoring and learned grid policy differ from UAV-X deadlines/endurance/connectivity; no claim that its improvement percentages apply to AeroMesh; cited for design and evaluation distinctions"
+  },
+  {
+    "id": "R12",
+    "title": "Artifact Review and Badging, Version 1.1",
+    "author_org": "ACM",
+    "url": "https://www.acm.org/publications/policies/artifact-review-and-badging-current",
+    "published": "2020-08-24",
+    "access": "Official policy page read via Jina Reader; cookie banner ignored",
+    "locators": ["Terminology", "Artifacts Evaluated", "Artifacts Available", "Results Validated"],
+    "claims": [
+      "Documented, consistent, complete and exercisable artifacts differ from independently reproduced results",
+      "Results reproduced and results replicated use different artifact/independence conditions"
+    ],
+    "authority": "Professional society policy",
+    "limits": "A useful handoff framework, not an IIT Bombay rule and not an ACM badge for this project"
+  },
+  {
+    "id": "R13",
+    "title": "OpenCV 4.10.0 calib3d: camera model documentation",
+    "author_org": "OpenCV contributors",
+    "url": "https://github.com/opencv/opencv/blob/4.10.0/modules/calib3d/include/opencv2/calib3d.hpp",
+    "revision": "4.10.0 release tag",
+    "access": "Official header documentation retrieved via GitHub API; introductory pinhole/intrinsic/extrinsic equations read",
+    "locators": ["Camera Calibration and 3D Reconstruction module introduction, lines approximately 55-150"],
+    "claims": [
+      "Pinhole image formation uses intrinsics and a world-to-camera rigid transform",
+      "Focal lengths are in pixel units; intrinsics must scale with image resizing"
+    ],
+    "authority": "Official computer-vision library documentation",
+    "limits": "Supports model/coordinate definitions; does not validate AeroMesh camera calibration. The 4.x website redirect returned an unrelated SVG and was not used as evidence"
+  },
+  {
+    "id": "R14",
+    "title": "VisDrone Dataset official repository",
+    "author_org": "AISKYEYE team, Tianjin University",
+    "url": "https://github.com/VisDrone/VisDrone-Dataset/blob/4364e8265275dfa44fd8f767b5180af58580194d/README.md",
+    "revision": "4364e8265275dfa44fd8f767b5180af58580194d",
+    "access": "Official README read through GitHub API; no dataset download",
+    "locators": ["Dataset introduction", "Task definitions", "Download", "Citation"],
+    "claims": [
+      "Drone imagery covers varying camera platforms, cities, weather, lighting, density and object occlusion",
+      "Object detection, tracking and crowd counting are distinct benchmark tasks",
+      "Public dataset splits and challenge-test annotations have distinct availability"
+    ],
+    "authority": "Official benchmark documentation",
+    "limits": "General aerial objects are not a disaster-survivor validation set. Dataset/code redistribution rights require separate review. No model trained or evaluated here"
+  },
+  {
+    "id": "R15",
+    "title": "MAVLink 2 Message Signing (Authentication)",
+    "author_org": "MAVLink project",
+    "url": "https://mavlink.io/en/guide/message_signing.html",
+    "access": "Official protocol guide read via Jina Reader",
+    "locators": ["Frame Format", "Timestamp Handling", "Accepting Signed Packets"],
+    "claims": [
+      "Signed MAVLink packets add authentication data and per-stream monotonically increasing timestamps",
+      "Receivers validate the signature and reject older timestamps under the documented stream policy"
+    ],
+    "authority": "Official protocol specification guide",
+    "limits": "Optional future external-adapter reference; not implemented or required by current Bullet mission. Authentication is distinct from delivery, message freshness for control and payload confidentiality"
+  }
+]

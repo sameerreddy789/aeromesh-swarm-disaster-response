@@ -151,11 +151,13 @@ class TestRouteRecovery:
 
         # Process forwarding: should detect broken link and switch to alternative UAV
         router.process_packet_forwarding(0.1)
-        assert router.successful_recoveries >= 1, "Reroute should succeed via alternative node"
+        assert router.reroutes_found >= 1, "Alternative route should be found"
+        assert router.successful_recoveries == 0, "Dispatch alone is not recovery"
         # Forward until delivery
         for _ in range(5):
             router.process_packet_forwarding(0.1)
         assert router.packets_delivered >= 1, "Packet should reach destination via alternative path"
+        assert router.successful_recoveries >= 1
 
     def test_5_no_alternative_route_graceful_drop(self):
         """5. When no alternative route exists, packet drops gracefully without crash or loop."""

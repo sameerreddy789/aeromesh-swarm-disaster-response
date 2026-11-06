@@ -1,0 +1,52 @@
+{
+  "scope": "Research-only mock interface checks; no simulator tests or evidence regenerated",
+  "checked_date_utc": "2026-11-06",
+  "method": "Isolated agent-browser headless session; DOM checks plus desktop/mobile screenshot inspection",
+  "observations": {
+    "external_runtime_dependencies": 0,
+    "fleet_markers": 30,
+    "before_snapshot_s": 95,
+    "future_events_hidden": true,
+    "during_outage_selected_uav17": "Stale / unknown in GCS mode; Failed in truth mode",
+    "outage_state_age_s": 4,
+    "partial_image_integrity": "not verified",
+    "timeout_timestamp": "98.0 s detected, not a received fault report",
+    "topology_toggle_visible": true,
+    "zoom_changes_viewbox": true,
+    "fit_restores_viewbox": "0 0 900 530",
+    "mobile_viewport_width_px": 390,
+    "mobile_document_width_px": 390,
+    "pointer_selection_uav17": true,
+    "map_geometry": "Explicitly schematic; not a metric map",
+    "grounded_markers": "21 roster markers, not pad positions",
+    "scene_aircraft_markers": 9,
+    "mock_safety_limit_m": 20,
+    "metric_scale_or_geofence_claim": false,
+    "actual_image_evidence": "Separate linked image audit; mock thumbnail remains schematic",
+    "browser_session_closed": true
+  },
+  "limitations": [
+    "Mock messages and values only; no live renderer or network integration.",
+    "Desktop is the intended jury-demo surface; mobile map symbols are small even though layout has no horizontal overflow.",
+    "Not a full accessibility conformance audit."
+  ],
+  "artifacts": {
+    "demo-wireframe.html": {
+      "bytes": 35940,
+      "sha256": "55c41cfd2ea5ff16150a5839356b71e27c766861127f11114b91a3916a673f72"
+    },
+    "demo-wireframe-gcs.png": {
+      "bytes": 104103,
+      "sha256": "eac159bd1eada5fb997008e1841aa50d873525c7a10b65761fe5bfd6a8da1741"
+    },
+    "demo-wireframe-truth-outage.png": {
+      "bytes": 108631,
+      "sha256": "ee322bc1f219cb36b62aa2ff390224018363757e4d2eed8d8750b38eb32d9df5"
+    },
+    "received-image-quality.png": {
+      "bytes": 70112,
+      "sha256": "f13f40f3c84a93d2bd616e79e5220f1b42a60449ccdb6854543489be7c78c33e"
+    }
+  },
+  "artifacts_total_bytes": 318786
+}

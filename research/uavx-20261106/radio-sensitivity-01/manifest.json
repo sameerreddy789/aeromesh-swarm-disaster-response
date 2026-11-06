@@ -1,0 +1,38 @@
+{
+  "scope": "Isolated unchanged MeshRouter experiment; not a flight or official benchmark",
+  "started_utc": "2026-11-06T02:55:06.251949+00:00",
+  "finished_utc": "2026-11-06T02:56:43.310720+00:00",
+  "wall_time_s": 97.04699999999139,
+  "fleet_identities": 30,
+  "chain_scope": "Only selected logical chain radios participate; remaining identities have inactive radios.",
+  "geometry": "Declared adjacent chain links <=100 m; static L-shape at z40; no motion simulated.",
+  "node_bandwidth_bytes_s": 131072.0,
+  "queue_limit_bytes": 1048576,
+  "deadline_s": 10.0,
+  "observation_horizon_s": 15.0,
+  "telemetry_or_control_background": false,
+  "iid_seeds_per_case": 1,
+  "acknowledgment": "No ACK; current shared-state immediate retry stop is deliberately reproduced.",
+  "missing_chunk": "Force all link retries of the first logical offer of one middle chunk to fail at its source; later application copies use baseline loss.",
+  "planned_cases": 240,
+  "completed_cases": 240,
+  "all_cases_completed": true,
+  "source_sha256_before": {
+    "comm\\mesh_router.py": "31ff5888dc11779edab0c1185b0eac2abe4e9d5510432d840567074340983b87",
+    "core\\models.py": "3d3555c0efb60e5567071886fba5ccb43f9731812cef86f0f1ec33281e19a64c",
+    "research\\uavx-20261106\\radio_sensitivity.py": "18b61d7946d522a8ef707956a7ca34011507567dd87e21a866e9d7fce400ea83"
+  },
+  "source_sha256_after": {
+    "comm\\mesh_router.py": "31ff5888dc11779edab0c1185b0eac2abe4e9d5510432d840567074340983b87",
+    "core\\models.py": "3d3555c0efb60e5567071886fba5ccb43f9731812cef86f0f1ec33281e19a64c",
+    "research\\uavx-20261106\\radio_sensitivity.py": "18b61d7946d522a8ef707956a7ca34011507567dd87e21a866e9d7fce400ea83"
+  },
+  "source_stable": true,
+  "caveats": [
+    "One fixed seed is sensitivity evidence, not a reliability estimate.",
+    "Synthetic byte arrays stand in for already encoded image bytes; no camera or recognition.",
+    "No physical RF interference, protocol discovery, clock error or flight model.",
+    "Delivery after15s is right-censored; ten-second failures are still failures.",
+    "Changing dt changes the router hop-delay setting as in the current mission constructor."
+  ]
+}
