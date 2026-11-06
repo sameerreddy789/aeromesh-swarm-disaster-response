@@ -1,0 +1,62 @@
+{
+  "scope": "Isolated research protocol comparison using unchanged MeshRouter; not a flight run",
+  "started_utc": "2026-11-06T05:27:32.557020+00:00",
+  "finished_utc": "2026-11-06T05:27:36.609220+00:00",
+  "wall_time_s": 4.062999999994645,
+  "planned_cases": 80,
+  "completed_cases": 80,
+  "source_sha256_before": {
+    "comm\\mesh_router.py": "31ff5888dc11779edab0c1185b0eac2abe4e9d5510432d840567074340983b87",
+    "core\\models.py": "3d3555c0efb60e5567071886fba5ccb43f9731812cef86f0f1ec33281e19a64c",
+    "research\\uavx-20261106\\radio_feedback.py": "e010bfd1e15f38cf1ef44767f737d88ae8cd43c5104d6eefbc9c52f136e85e81",
+    "research\\uavx-20261106\\radio_sensitivity.py": "18b61d7946d522a8ef707956a7ca34011507567dd87e21a866e9d7fce400ea83",
+    "research\\uavx-20261106\\radio-sensitivity-01\\cases.jsonl": "3353e282b93e639e3acdd93aa5dd555497e4a83d4d215d6a814977b0bc176b7f"
+  },
+  "source_sha256_after": {
+    "comm\\mesh_router.py": "31ff5888dc11779edab0c1185b0eac2abe4e9d5510432d840567074340983b87",
+    "core\\models.py": "3d3555c0efb60e5567071886fba5ccb43f9731812cef86f0f1ec33281e19a64c",
+    "research\\uavx-20261106\\radio_feedback.py": "e010bfd1e15f38cf1ef44767f737d88ae8cd43c5104d6eefbc9c52f136e85e81",
+    "research\\uavx-20261106\\radio_sensitivity.py": "18b61d7946d522a8ef707956a7ca34011507567dd87e21a866e9d7fce400ea83",
+    "research\\uavx-20261106\\radio-sensitivity-01\\cases.jsonl": "3353e282b93e639e3acdd93aa5dd555497e4a83d4d215d6a814977b0bc176b7f"
+  },
+  "source_stable": true,
+  "fleet_identities": 30,
+  "radio_chain_hops": [
+    5,
+    14
+  ],
+  "dt_s": [
+    0.5,
+    0.1
+  ],
+  "raw_frame_bytes": 32768,
+  "chunk_bytes": 512,
+  "deadline_s": 10.0,
+  "horizon_s": 30.0,
+  "node_bandwidth_bytes_s": 131072.0,
+  "queue_limit_bytes": 1048576,
+  "policies": [
+    "single_with_ack",
+    "full_retry_until_ack",
+    "one_nack_repair",
+    "xor1_with_ack"
+  ],
+  "profiles": [
+    "none",
+    "one_first_offer_erasure",
+    "two_first_offer_erasures",
+    "middle_link_burst_2_to_5",
+    "all_links_burst_2_to_5"
+  ],
+  "feedback": "Real reverse-path CONTROL packets with priority zero; charged same shared TX/RX calendars. ACK on first verified completion and each received duplicate batch final chunk; full retries stop only at first received ACK. Queued duplicate data is not cancelled.",
+  "nack": "One NACK triggered by receipt of original final data chunk, listing currently missing indices. One selective repair batch. No repeated NACK/loss-detector timer; missing final marker may prevent repair. This is deliberately optimistic feedback timing, not a complete reliable protocol.",
+  "fec": "One raw 512-byte XOR parity chunk over64 equal-length data chunks. All serialized bytes charged; recover exactly one missing data chunk. Final length and SHA256 verified. No general multi-erasure FEC claim.",
+  "channel": "Loss sampled at whole serialized attempt completion. One/two original middle data chunks forced lost on all source attempts. Burst profiles fail every completed attempt on selected bidirectional links while2<=t<5; link topology/quality view remains stale-connected.",
+  "caveats": [
+    "No background traffic, route discovery, interference physics, clock uncertainty or vehicle motion.",
+    "Static selected logical chain; all declared adjacent distances <=100m. Other30-fleet identities inactive.",
+    "Deterministic counterexamples, not probability estimates or matched-mean IID/burst comparison.",
+    "hop_delay_s changes with dt as in current constructor; numerical and model delay remain coupled.",
+    "Thirty-second observation cutoff does not extend ten-second deadline."
+  ]
+}

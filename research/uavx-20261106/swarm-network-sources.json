@@ -1,0 +1,735 @@
+{
+  "schema_version": 1,
+  "scope": "Swarm allocation, connectivity, networking, information freshness and inter-vehicle safety research",
+  "status": "completed research synthesis; no production qualification claim",
+  "retrieved_utc": "2026-11-06",
+  "repository": "D:\\Hackathons\\Projects\\Web Dev\\New\\AeroMesh-UAVX",
+  "source_count": 28,
+  "reading_summary": {
+    "primary_papers_selected_full_text_sections": 12,
+    "institutional_abstract_and_metadata_only": 2,
+    "official_rfc_selected_sections": 8,
+    "official_project_or_implementation_documentation": 5,
+    "pinned_official_source_inspection_no_build": 1
+  },
+  "provenance_notes": [
+    "Reading levels distinguish original full text, selected sections, project documentation and abstract-only sources.",
+    "Publication dates come from author/institutional/RFC records, not proxy HTTP Last-Modified headers.",
+    "Search snippets are discovery leads, not supporting sources.",
+    "No production code changed, packages installed, or large assets downloaded. Authorized research-only isolated radio scripts and outputs are stored separately.",
+    "The ORCA original PDF was unavailable; its project page and pinned RVO2-3D source are distinguished from the separately read AVO paper.",
+    "SWIM publication-date metadata remains unresolved and is not inferred from a proxy HTTP timestamp."
+  ],
+  "sources": [
+    {
+      "id": "SW01",
+      "locator": "About; CBBA Variants: ACBBA, CCBBA and CBBA with Relays",
+      "title": "Consensus-Based Bundle Algorithm (CBBA)",
+      "url": "https://acl.mit.edu/projects/consensus-based-bundle-algorithm",
+      "authors_organization": "MIT Aerospace Controls Laboratory",
+      "publication_date": null,
+      "update_date": null,
+      "reading_level": "official project page read in full",
+      "claims": [
+        "CBBA alternates greedy bundle construction and neighbor consensus.",
+        "ACBBA addresses asynchronous, out-of-order and redundant messages.",
+        "Relay variant creates relay tasks from predicted selected-time topology."
+      ],
+      "applicability": "Architectural reference for a future message-driven allocator and explicit relay tasks.",
+      "caveats": [
+        "Current allocator is centralized matching, not CBBA.",
+        "Project-page prose does not establish all proof assumptions.",
+        "Proxy HTTP date 2026-10-07 is not a paper publication date."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW02",
+      "locator": "Institutional Abstract; journal/DOI metadata",
+      "title": "Consensus-based decentralized auctions for robust task allocation",
+      "url": "https://pure.kaist.ac.kr/en/publications/consensus-based-decentralized-auctions-for-robust-task-allocation/",
+      "doi": "10.1109/TRO.2009.2022423",
+      "authors_organization": "Han-Lim Choi, Luc Brunet, Jonathan P. How; KAIST/MIT author record",
+      "publication_date": "2009-08",
+      "update_date": null,
+      "reading_level": "author institutional abstract and metadata; original full paper not yet read",
+      "claims": [
+        "CBAA and CBBA use local consensus to deconflict bids.",
+        "Convergence and worst-case performance are conditional on score assumptions."
+      ],
+      "applicability": "Prevents labeling matching or arbitrary relay-coupled bids as proven CBBA.",
+      "caveats": [
+        "Exact diminishing-marginal-gain assumptions are supplemented by SW03, not fully inspected in this original paper.",
+        "Robustness to topology variation is not a guarantee under permanent partition."
+      ],
+      "confidence": "high for abstract/metadata; conditional for transferred algorithm guarantees",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW03",
+      "locator": "Sections 2.2–2.3, 3 and 4 (bundle resets, diminishing marginal gains, communication-round convergence)",
+      "title": "Partial Replanning for Decentralized Dynamic Task Allocation",
+      "url": "https://arxiv.org/html/1806.04836",
+      "metadata_url": "https://arxiv.org/abs/1806.04836",
+      "doi": "10.2514/6.2019-0915",
+      "authors_organization": "Noam Buckman, Han-Lim Choi, Jonathan P. How",
+      "publication_date": "2018-06-12",
+      "update_date": "2018-10-25",
+      "reading_level": "full text, selected algorithm and convergence sections",
+      "claims": [
+        "CBBA assumes diminishing marginal gains and bounded communication rounds over the network.",
+        "Resetting a lost task requires releasing the later bundle suffix.",
+        "Partial replanning trades response time against coordination; the paper validates in multi-UAV simulation."
+      ],
+      "applicability": "Relevant to dynamic PoIs, equal-priority stability, and selective replanning.",
+      "caveats": [
+        "Communication rounds are not seconds.",
+        "Joint relay/energy/deadline feasibility can violate the simple score assumptions.",
+        "No direct qualification of this repository."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW04",
+      "locator": "Abstract and BibTeX citation",
+      "title": "A comprehensive taxonomy for multi-robot task allocation",
+      "url": "https://publications.ri.cmu.edu/a-comprehensive-taxonomy-for-multi-robot-task-allocation",
+      "authors_organization": "G. Ayorkor Korsah, Anthony Stentz, M. Bernardine Dias; CMU Robotics Institute",
+      "publication_date": "2013-10",
+      "update_date": null,
+      "reading_level": "institutional abstract and citation metadata",
+      "claims": [
+        "Task allocation ranges from instantaneous independent assignments to time-extended scheduling with interrelated utility and constraints.",
+        "iTax explicitly represents interrelated utilities and constraints."
+      ],
+      "applicability": "Classify relay, survey, recharge and return as coupled scheduling; avoid pretending every problem is independent matching.",
+      "caveats": [
+        "Taxonomy is not an executable solver.",
+        "Full 18-page paper not yet read."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW05",
+      "locator": "Introduction; Sections II–IV (location objective, centroidal Voronoi critical points, asynchronous implementations)",
+      "title": "Coverage control for mobile sensing networks",
+      "url": "https://arxiv.org/html/math/0212212v1",
+      "metadata_url": "https://arxiv.org/abs/math/0212212",
+      "authors_organization": "Jorge Cortés, Sonia Martínez, Timur Karatas, Francesco Bullo",
+      "publication_date": "2002-12-16",
+      "journal_date": "2004",
+      "update_date": null,
+      "reading_level": "full text selected introduction, objective and convergence discussion",
+      "claims": [
+        "Distributed Lloyd/gradient methods optimize a spatial sensor-placement objective.",
+        "Convergence is to centroidal Voronoi critical configurations under stated assumptions.",
+        "Asynchronous implementations and extensions to vehicle dynamics are analyzed."
+      ],
+      "applicability": "A coverage baseline for unknown search fields, distinct from announced PoI service.",
+      "caveats": [
+        "Critical-point convergence is not a global optimum or guaranteed discovery of every survivor.",
+        "Sensor-placement coverage differs from visiting announced PoIs.",
+        "Radio, recharge and strict deadline constraints need separate treatment."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW06",
+      "locator": "PDF pp. 2–3, Section III (control law); pp. 3–6, Section IV and conclusion (three-quadrotor field implementation)",
+      "title": "Decentralized Connectivity Control in Quadcopters: a Field Study of Communication Performance",
+      "url": "https://arxiv.org/pdf/1909.10378",
+      "metadata_url": "https://arxiv.org/abs/1909.10378",
+      "authors_organization": "Jacopo Panerati, Benjamin Ramtoula, David St-Onge, Yanjun Cao, Marcel Kaufmann, Aidan Cowley, Lorenzo Sabattini, Giovanni Beltrame",
+      "publication_date": "2019-09-23",
+      "update_date": null,
+      "reading_level": "full PDF text; selected control-law and implementation sections",
+      "claims": [
+        "Positive second Laplacian eigenvalue identifies connected undirected communication graphs.",
+        "Connectivity alone can leave vulnerable high-centrality nodes; robustness is separately addressed.",
+        "Distributed power iteration requires correction communication; one-/two-hop information has a communication cost.",
+        "Single-integrator law requires adequate low-level tracking."
+      ],
+      "applicability": "Compare global spectral connectivity, biconnectivity and measured packet service.",
+      "caveats": [
+        "No implication that lambda_2 guarantees deadline, throughput or node-failure tolerance.",
+        "Field hardware and communication setup differ from AeroMesh.",
+        "An HTML proxy request redirected to an SVG; that response was excluded."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW07",
+      "locator": "PDF pp. 1–2 (29 stationary nodes); Section 3.1 (ETX/probes) and 3.2 (assumptions, congestion, mobility)",
+      "title": "A High-Throughput Path Metric for Multi-Hop Wireless Routing",
+      "url": "https://pdos.csail.mit.edu/papers/grid:mobicom03/paper.pdf",
+      "authors_organization": "Douglas S. J. De Couto, Daniel Aguayo, John Bicket, Robert Morris; MIT CSAIL",
+      "publication_date": "2003-09",
+      "update_date": null,
+      "reading_level": "full PDF text, sections 1–3 and experimental setup",
+      "claims": [
+        "ETX is 1/(forward delivery ratio times reverse ACK delivery ratio); path ETX is additive.",
+        "Original implementation uses one-second probes and a ten-second measurement window.",
+        "Original evaluation uses stationary 29-node 802.11b testbed.",
+        "ETX does not specifically account for mobility or route around congestion."
+      ],
+      "applicability": "Correct meaning of ETX, loss/ACK asymmetry, probe aging and route-cost limitations.",
+      "caveats": [
+        "Repository uses 1/p for an ideal symmetric single-attempt abstraction, not measured bidirectional ETX.",
+        "Original throughput results cannot be generalized to 30 flying UAVs.",
+        "Fixed-power/link-retransmission assumptions and probe bias must be retained."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW08",
+      "locator": "Abstract; Sections 3, 10 and 18.3 (protocol/timer defaults); Security Considerations",
+      "title": "RFC 3626: Optimized Link State Routing Protocol (OLSR)",
+      "url": "https://www.rfc-editor.org/rfc/rfc3626",
+      "authors_organization": "Thomas Clausen, Philippe Jacquet; IETF",
+      "publication_date": "2003-10",
+      "update_date": null,
+      "reading_level": "full specification cached; abstract, routing and security sections inspected",
+      "claims": [
+        "OLSR is proactive link state using multipoint relays to reduce flooding.",
+        "Base OLSRv1 routes optimize hop count.",
+        "RFC status is Experimental."
+      ],
+      "applicability": "A proactive protocol baseline; account for periodic control traffic and route aging.",
+      "caveats": [
+        "No deployed OLSR stack exists in the current centralized graph router.",
+        "Timers and metric extensions are configuration/version dependent.",
+        "Not an Internet Standard."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW09",
+      "locator": "Sections 1–2, 6.3, 6.9 and 10 (discovery, neighbor loss and parameter defaults)",
+      "title": "RFC 3561: Ad hoc On-Demand Distance Vector (AODV) Routing",
+      "url": "https://www.rfc-editor.org/rfc/rfc3561",
+      "authors_organization": "Charles Perkins, Elizabeth Belding-Royer, Samir Das; IETF",
+      "publication_date": "2003-07",
+      "update_date": null,
+      "reading_level": "full specification cached; overview, sequence numbers, route discovery and parameter defaults inspected",
+      "claims": [
+        "AODV discovers routes on demand and uses destination sequence numbers for freshness/loop freedom.",
+        "Default HELLO interval is 1000 ms and allowed HELLO loss 2.",
+        "Default node traversal 40 ms and network diameter 35 give NET_TRAVERSAL_TIME 2.8 s and PATH_DISCOVERY_TIME 5.6 s."
+      ],
+      "applicability": "Demonstrates that failure detection and route discovery consume nonzero deadline slack.",
+      "caveats": [
+        "Defaults are examples, not measured UAV timing or guarantees.",
+        "RFC is Experimental.",
+        "Current code lacks RREQ/RREP/RERR and node-local route discovery."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW10",
+      "locator": "Sections 4.5, 4.6 and 5.4.3",
+      "title": "RFC 7181: The Optimized Link State Routing Protocol Version 2",
+      "url": "https://www.rfc-editor.org/rfc/rfc7181",
+      "authors_organization": "Thomas Clausen, Christopher Dearlove, Philippe Jacquet, Ulrich Herberg; IETF",
+      "publication_date": "2014-04",
+      "update_date": null,
+      "reading_level": "full specification cached; sections 4.5, 4.6 and 5.4.3 inspected",
+      "claims": [
+        "OLSRv2 supports additive link metrics.",
+        "Flooding MPRs and routing MPRs are distinct.",
+        "TC advertisements remain periodic even if change-triggered updates are used."
+      ],
+      "applicability": "More accurate proactive metric-routing comparator than casually calling OLSRv1 ETX-based.",
+      "caveats": [
+        "Metric acquisition and protocol overhead still need implementation and calibration.",
+        "Standards Track status does not establish suitability for this hardware."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW11",
+      "locator": "Overview and implementation/ideas links",
+      "title": "B.A.T.M.A.N. Advanced Documentation Overview",
+      "url": "https://www.open-mesh.org/projects/batman-adv/wiki/Doc-overview",
+      "authors_organization": "Open Mesh / batman-adv maintainers",
+      "publication_date": null,
+      "update_date": null,
+      "reading_level": "official implementation documentation overview",
+      "claims": [
+        "batman-adv is a Linux kernel Layer 2 mesh implementation controlled by batctl.",
+        "BATMAN IV and V use different path metrics.",
+        "Draft/idea pages may describe unimplemented behavior."
+      ],
+      "applicability": "Distinguish a real mesh data plane from a simulator routing algorithm.",
+      "caveats": [
+        "Deployment depends on Linux/network interfaces and is not drop-in Windows Python code.",
+        "Overview mixes links to current docs and historical ideas."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW12",
+      "locator": "Separating neighbor discovery from mesh routing; Throughput based metric; Backward compatibility",
+      "title": "B.A.T.M.A.N. V",
+      "url": "https://www.open-mesh.org/projects/batman-adv/wiki/BATMAN_V",
+      "authors_organization": "Open Mesh / batman-adv maintainers",
+      "publication_date": null,
+      "update_date": null,
+      "reading_level": "official documentation read in full",
+      "claims": [
+        "ELP handles local neighbor discovery while OGMv2 propagates routing metrics.",
+        "V uses throughput estimates rather than IV packet-loss/TQ metric.",
+        "WiFi estimates depend on driver support and often payload traffic; path metric includes bottleneck and additional factors."
+      ],
+      "applicability": "Illustrates measuring service capacity and local-versus-global control cadence.",
+      "caveats": [
+        "Throughput-meter feature is explicitly marked upcoming on the retrieved page; not assumed implemented.",
+        "Path bottleneck estimate does not prove multihop end-to-end offered-load capacity.",
+        "No extra radio/interface proposal is implied."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW13",
+      "locator": "Sections I–III; Section II.A/B (time-average versus peak age) and III packet-management discussion",
+      "title": "Age of Information: An Introduction and Survey",
+      "url": "https://arxiv.org/pdf/2007.08564",
+      "metadata_url": "https://arxiv.org/abs/2007.08564",
+      "authors_organization": "Roy D. Yates, Yin Sun, D. Richard Brown III, Sanjit K. Kaul, Eytan Modiano, Sennur Ulukus",
+      "publication_date": "2020-07-16",
+      "update_date": null,
+      "reading_level": "author abstract and full PDF text; metric/introduction sections",
+      "claims": [
+        "AoI measures freshness of time-stamped status updates at a receiver.",
+        "Freshness optimization depends on service, queues, sampling, loss and resource limits."
+      ],
+      "applicability": "Track telemetry observation age separately from delivered-packet latency and image-completion deadline.",
+      "caveats": [
+        "Survey summarizes many queue models; none automatically describes this mesh.",
+        "Discarding stale telemetry is not permission to discard required evidence images.",
+        "HTML proxy redirect to SVG excluded."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW14",
+      "locator": "Sections 3.1–3.3 (congestion, message size, reliability)",
+      "title": "RFC 8085: UDP Usage Guidelines",
+      "url": "https://www.rfc-editor.org/rfc/rfc8085",
+      "authors_organization": "Lars Eggert, Gorry Fairhurst, Greg Shepherd; IETF",
+      "publication_date": "2017-03",
+      "update_date": null,
+      "reading_level": "full specification cached; congestion, message-size and reliability guidance inspected",
+      "claims": [
+        "UDP has no inherent congestion control.",
+        "Applications must account for congestion, message sizing and needed reliability.",
+        "Even relatively low-rate bursts may exceed a constrained path."
+      ],
+      "applicability": "Use pacing, bounded retry traffic, admission and explicit application completion.",
+      "caveats": [
+        "Internet BCP guidance is not a quantitative radio-channel model.",
+        "Do not assume an abstract queue already implements Internet congestion control."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW15",
+      "locator": "Abstract and alternatives/recommendations on fragmentation",
+      "title": "RFC 8900: IP Fragmentation Considered Fragile",
+      "url": "https://www.rfc-editor.org/rfc/rfc8900",
+      "authors_organization": "Ron Bonica, Fred Baker, Geoff Huston, Robert Hinden, Ole Troan, Fernando Gont; IETF",
+      "publication_date": "2020-09",
+      "update_date": null,
+      "reading_level": "full specification cached; abstract and fragmentation recommendations",
+      "claims": [
+        "IP fragmentation introduces operational fragility.",
+        "Developers should consider alternatives to IP fragmentation."
+      ],
+      "applicability": "Treat image chunking, protocol envelope, MTU and complete reassembly as explicit design concerns.",
+      "caveats": [
+        "Current JSON-envelope bytes are not measured UDP/IP/MAC wire bytes.",
+        "Need actual encapsulation budget before declaring a 512-byte chunk MTU-safe."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW16",
+      "locator": "Abstract and Publications; original linked PDF retrieval returned 404",
+      "title": "Optimal Reciprocal Collision Avoidance (ORCA)",
+      "url": "https://gamma-web.iacs.umd.edu/ORCA/",
+      "authors_organization": "Jur van den Berg, Stephen J. Guy, Ming Lin, Dinesh Manocha; author project",
+      "publication_date": "2011-05",
+      "update_date": null,
+      "reading_level": "official author project page; original PDF link returned 404",
+      "claims": [
+        "Agents share half the pairwise collision-avoidance responsibility.",
+        "Velocity selection is a low-dimensional linear program.",
+        "Demonstrations include 2D and 3D simulation and differential-drive robots."
+      ],
+      "applicability": "A kinematic reciprocal collision-avoidance baseline, not a proof for the current force-driven aircraft.",
+      "caveats": [
+        "Original PDF not yet read; do not transfer uninspected theorem details.",
+        "Failed or immobile agents cannot provide their nominal reciprocal half.",
+        "Project license prose is older than SW17 implementation license."
+      ],
+      "confidence": "high for project statements; limited for theorem transfer",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW17",
+      "locator": "News; Latest Versions; Introduction",
+      "title": "RVO2 Library / RVO2-3D Library",
+      "url": "https://gamma-web.iacs.umd.edu/RVO2/",
+      "authors_organization": "University of North Carolina at Chapel Hill; maintained by Jamie Snape",
+      "publication_date": null,
+      "update_date": "2016-05-04",
+      "reading_level": "official project documentation read in full",
+      "claims": [
+        "Page lists RVO2 2.0.2 and RVO2-3D 1.0.1 released May 4, 2016.",
+        "Both were released under Apache License 2.0.",
+        "RVO2-3D supports 3D agents without static obstacles."
+      ],
+      "applicability": "Implementation lead and licensing/obstacle-scope check.",
+      "caveats": [
+        "Page version list may be historical, not globally current.",
+        "Third-party Python bindings are not the official core implementation.",
+        "No library installed or benchmarked."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW18",
+      "locator": "Sections II–III (dynamics, safe set, theorem); IV-B (conservative acceleration estimates); conclusion (infeasibility)",
+      "title": "Safety Barrier Certificates for Heterogeneous Multi-Robot Systems",
+      "url": "https://arxiv.org/html/1609.00651",
+      "metadata_url": "https://arxiv.org/abs/1609.00651",
+      "doi": "10.1109/ACC.2016.7526486",
+      "authors_organization": "Li Wang, Aaron Ames, Magnus Egerstedt",
+      "publication_date": "2016-07",
+      "update_date": "2016-09-02",
+      "reading_level": "full text sections II–IV and conclusion",
+      "claims": [
+        "Safe set includes closing-speed stopping-distance constraints for bounded-acceleration double integrators.",
+        "Forward invariance requires a feasible controller satisfying all barriers from a safe initial state.",
+        "Conservative neighbor acceleration estimates preserve the stated certificate.",
+        "Crowded pairwise constraints can make the optimization infeasible."
+      ],
+      "applicability": "Reason to include measured velocity, actuation bounds, input feasibility and explicit fallback in future swarm safety work.",
+      "caveats": [
+        "Paper model is 2D double integrator, not 6DOF rotor dynamics.",
+        "Continuous-time certificate does not automatically survive 20 Hz implementation.",
+        "Returning toward a safe set after violation does not erase the violation."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW19",
+      "locator": "PDF Section III (metric graph, depot, zero dwell/recharge transformation), III-A (timed walks), IV (approximation)",
+      "title": "Multi-Robot Persistent Monitoring: Minimizing Latency and Number of Robots with Recharging Constraints",
+      "url": "https://arxiv.org/pdf/2303.08935",
+      "metadata_url": "https://arxiv.org/abs/2303.08935",
+      "authors_organization": "Ahmad Bilal Asghar, Shreyas Sundaram, Stephen L. Smith",
+      "publication_date": "2023-03-15",
+      "update_date": null,
+      "reading_level": "full PDF text, selected Sections II–IV; graph/recharge assumptions inspected",
+      "claims": [
+        "Persistent monitoring couples revisit-latency constraints, finite discharge time and periodic recharge.",
+        "Paper studies minimum robots and fixed-fleet weighted latency variants.",
+        "Approximation and orienteering heuristic are evaluated on patrolling and wildfire instances."
+      ],
+      "applicability": "Frame fleet-time capacity and recharge as constraints before choosing allocation heuristics.",
+      "caveats": [
+        "Persistent revisit latency is not this mission's one-shot detection-to-report deadline.",
+        "Fixed fleet remains 30; no resource inflation recommendation.",
+        "HTML proxy redirected to SVG and was excluded; selected full-PDF text was subsequently read.",
+        "Section III absorbs inspection/recharge time into an equivalent graph and uses a zero dwell/recharge formulation; finite charging-pad contention is not modeled."
+      ],
+      "confidence": "high for inspected Sections II–IV; finite charging capacity is not modeled",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW20",
+      "title": "Control Barrier Functions for Sampled-Data Systems with Input Delays",
+      "url": "https://arxiv.org/html/2005.06418v1",
+      "metadata_url": "https://arxiv.org/abs/2005.06418",
+      "doi": "10.1109/CDC42340.2020.9304281",
+      "authors_organization": "Andrew Singletary, Yuxiao Chen, Aaron D. Ames",
+      "publication_date": "2020-05-13",
+      "update_date": null,
+      "locator": "Section II-C and Proposition 1; input-delay extension; simulation section",
+      "reading_level": "full HTML text selected sections; cross-checked with physics research owner",
+      "claims": [
+        "Safety for zero-order-hold implementation must cover the entire intersample interval.",
+        "Reachability/state-uncertainty and backup-controller conditions are explicit.",
+        "Known input delay can be included under the paper's assumptions."
+      ],
+      "applicability": "Explains why sampled first-order pair constraints do not certify a lagged 6DOF swarm.",
+      "caveats": [
+        "Segway simulation, not this drone swarm.",
+        "Arbitrary unknown jitter and unbounded observation error are not covered.",
+        "Initial backup-safe set and bounded uncertainty conditions must hold."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader; SW24 also small original PDF text/render verification",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW21",
+      "title": "Reciprocal Collision Avoidance with Acceleration-Velocity Obstacles",
+      "url": "https://gamma-web.iacs.umd.edu/AVO/AVO.pdf",
+      "metadata_url": "https://gamma-web.iacs.umd.edu/AVO/",
+      "authors_organization": "Jur van den Berg, Jamie Snape, Stephen J. Guy, Dinesh Manocha; UNC",
+      "publication_date": "2011",
+      "update_date": null,
+      "locator": "PDF pp. 1–2; Sections III–V (proportional acceleration, reciprocal avoidance, nonholonomic extension)",
+      "reading_level": "full PDF text, introduction and model/formulation sections",
+      "claims": [
+        "Ordinary velocity obstacles assume instantaneous adopted velocity.",
+        "Clamping a velocity solution after optimization can invalidate collision avoidance.",
+        "AVO models proportional acceleration toward new velocity and reciprocal response."
+      ],
+      "applicability": "Closer conceptual comparator than raw ORCA for velocity-command tracking with acceleration limits.",
+      "caveats": [
+        "Original model is 2D discs with perfect inferred obstacle position/velocity and specific acceleration response.",
+        "Not a certificate for Bullet rotor lag, tilt/mixer saturation, stale data or terrain.",
+        "Holonomic/nonzero-speed conditions limit nonholonomic extension."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader; SW24 also small original PDF text/render verification",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW22",
+      "title": "RVO2-3D official implementation: Agent.cc at f940bfba8bac9532ecae948f11639085e8cbf277",
+      "url": "https://github.com/snape/RVO2-3D/blob/f940bfba8bac9532ecae948f11639085e8cbf277/src/Agent.cc",
+      "authors_organization": "Jamie Snape and RVO2-3D contributors",
+      "publication_date": null,
+      "update_date": "2026-10-24",
+      "commit": "f940bfba8bac9532ecae948f11639085e8cbf277",
+      "locator": "Agent.cc lines 376–443 and 471–473",
+      "reading_level": "pinned source read through GitHub API; no build/run",
+      "claims": [
+        "Half-responsibility ORCA plane uses velocity +0.5*u.",
+        "LP chooses within maxSpeed and has a fallback solver path.",
+        "update assigns new velocity then advances position by velocity*timeStep directly."
+      ],
+      "applicability": "Explicit source evidence of kinematic semantics; use as reference-velocity generator only in a force-driven comparison.",
+      "caveats": [
+        "Not built or benchmarked.",
+        "A source listing does not prove conditions satisfied for the project.",
+        "Pinned 2D sister repo head is 6b4eb00a93a9f3abf723235ff006d6aad3e2f212."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach dev route: read-only GitHub API",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW23",
+      "title": "Online Trajectory Generation with Distributed Model Predictive Control for Multi-Robot Motion Planning",
+      "url": "https://arxiv.org/pdf/1909.05150",
+      "metadata_url": "https://arxiv.org/abs/1909.05150",
+      "doi": "10.1109/LRA.2020.2964159",
+      "authors_organization": "Carlos E. Luis, Marijan Vukosavljev, Angela P. Schoellig",
+      "publication_date": "2019-09-11",
+      "update_date": "2020-01-24",
+      "journal_date": "2020",
+      "locator": "PDF pp. 2–6; Sections II, III-E/F, IV, V and VI",
+      "reading_level": "full PDF text, model/constraints/implementation/results sections",
+      "claims": [
+        "Uses identified discrete linear position-tracking dynamics and communicated future actions.",
+        "On-demand collision constraints use penalized slack and only selected samples.",
+        "Physical up-to-20-drone experiments ran the distributed optimizations centrally offboard because platform lacked inter-agent communication.",
+        "Authors report higher-density constraint relaxation can cause collisions."
+      ],
+      "applicability": "Useful performance baseline and warning against equating distributed formulation with decentralized deployment.",
+      "caveats": [
+        "5 Hz replanning and performance numbers concern identified Crazyflie platform and small arena.",
+        "Input-space collision avoidance does not apply safely to arbitrary state/input relationships.",
+        "No hard-safety or 100m-radio qualification transferred."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader; SW24 also small original PDF text/render verification",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW24",
+      "title": "Deadlock Resolution and Recursive Feasibility in MPC-based Multi-robot Trajectory Generation",
+      "url": "https://arxiv.org/pdf/2202.06071v4",
+      "metadata_url": "https://arxiv.org/abs/2202.06071",
+      "authors_organization": "Yuda Chen, Meng Guo, Zhongkui Li",
+      "publication_date": "2022-02-12",
+      "update_date": "2024-04-09",
+      "locator": "PDF p. 8 Theorem 2; p. 9 Theorem 3, Corollary 1, Theorem 4; Sections II–III",
+      "reading_level": "full text selected formulation/proofs; original PDF pp. 8–9 visually verified",
+      "claims": [
+        "No-stable-deadlock theorem requires separated targets and no three-or-more collinear target projections.",
+        "Recursive feasibility starts from feasible plans and uses a terminal equilibrium.",
+        "Local communication radius is 2*vmax*K*h + r_min_prime + 2*epsilon."
+      ],
+      "applicability": "Directly exposes mismatch with deliberately collinear relay goals and ties MPC horizon to radio range.",
+      "caveats": [
+        "Conditions exclude current straight relay target pattern; this does not prove that pattern fails, only that the cited theorem does not apply.",
+        "Double-integrator model and communication assumptions need checking against 6DOF tracking and delayed messages.",
+        "No new solver implemented or qualified."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader; SW24 also small original PDF text/render verification",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW25",
+      "title": "SWIM: Scalable Weakly-consistent Infection-style Process Group Membership Protocol",
+      "url": "https://www.cs.cornell.edu/projects/Quicksilver/public_pdfs/SWIM.pdf",
+      "authors_organization": "Abhinandan Das, Indranil Gupta, Ashish Motivala; Cornell University",
+      "publication_date": null,
+      "publication_date_note": "PDF text retrieved; venue/year metadata still to cross-check (do not use proxy 2024 header as publication date).",
+      "update_date": null,
+      "locator": "Sections 1, 3.1, 3.2 and 4.2",
+      "reading_level": "full PDF text, failure-detection/dissemination/suspicion sections",
+      "claims": [
+        "Failure detection and membership dissemination are separate concerns.",
+        "Indirect probing and suspicion reduce false failure declarations.",
+        "Unreliable/delayed communication can make a healthy process appear failed.",
+        "Weak membership views need not agree at the same time."
+      ],
+      "applicability": "Design vocabulary for observed/suspected/confirmed failure and per-observer detection latency.",
+      "caveats": [
+        "Evaluated on commodity PC clusters, not a mobile RF fleet.",
+        "Gossip across a partition cannot recover destroyed communication.",
+        "Do not import constant-time claims without original connectivity/timing/probe assumptions."
+      ],
+      "confidence": "high for retrieved sections; publication date unresolved",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader; SW24 also small original PDF text/render verification",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW26",
+      "title": "RFC 4594: Configuration Guidelines for DiffServ Service Classes",
+      "url": "https://www.rfc-editor.org/rfc/rfc4594",
+      "authors_organization": "Jozef Babiarz, Kwok Chan, Fred Baker; IETF",
+      "publication_date": "2006-08",
+      "update_date": null,
+      "locator": "Abstract; service-class configuration and traffic-conditioning discussion",
+      "reading_level": "official RFC, abstract and relevant guidance selected",
+      "claims": [
+        "Service classes combine DSCP, traffic conditioners, per-hop behavior and AQM.",
+        "A service label is not by itself the mechanism providing differentiated service."
+      ],
+      "applicability": "Separate application importance, scheduling and actual network treatment.",
+      "caveats": [
+        "Informational RFC, not a specific UAV traffic standard.",
+        "Current local priority enum is not DSCP/802.11 QoS."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader; SW24 also small original PDF text/render verification",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW27",
+      "title": "RFC 8325: Mapping Diffserv to IEEE 802.11",
+      "url": "https://www.rfc-editor.org/rfc/rfc8325",
+      "authors_organization": "Tim Szigeti, Jerome Henry, Fred Baker; IETF",
+      "publication_date": "2018-02",
+      "update_date": null,
+      "locator": "Abstract; Sections 2–4 (DSCP/UP and access-category mapping)",
+      "reading_level": "official RFC selected overview/mapping guidance",
+      "claims": [
+        "Consistent wired/wireless QoS requires deliberate DSCP-to-802.11 user-priority mapping.",
+        "Default mapping need not match intended service treatment."
+      ],
+      "applicability": "Future network-emulation baseline must inspect actual queue/access-category mapping, not just set priority flags.",
+      "caveats": [
+        "Standards Track does not create a guaranteed latency under arbitrary load.",
+        "Do not presume WiFi hardware or extra interfaces in the selected resources."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader; SW24 also small original PDF text/render verification",
+      "status": "retrieved"
+    },
+    {
+      "id": "SW28",
+      "title": "RFC 2212: Specification of Guaranteed Quality of Service",
+      "url": "https://www.rfc-editor.org/rfc/rfc2212",
+      "authors_organization": "Scott Shenker, Craig Partridge, Roch Guerin; IETF",
+      "publication_date": "1997-09",
+      "update_date": null,
+      "locator": "End-to-End Behavior; Motivation; traffic/admission specifications",
+      "reading_level": "official RFC selected guaranteed-delay/admission sections",
+      "claims": [
+        "Firm delay bounds depend on traffic specification, allocated service and bounded deviations.",
+        "The specified guaranteed service is subject to admission control.",
+        "Route/service changes affect guaranteed end-to-end behavior."
+      ],
+      "applicability": "Demonstrates missing ingredients behind a deadline guarantee; informs burst/service bounds.",
+      "caveats": [
+        "AeroMesh has no RSVP/IntServ reservation and does not implement this guarantee.",
+        "Old fixed-path model is a conceptual baseline, not a ready FANET solution."
+      ],
+      "confidence": "high",
+      "retrieval_date": "2026-11-06",
+      "retrieval_method": "agent-reach web route: Jina Reader; SW24 also small original PDF text/render verification",
+      "status": "retrieved"
+    }
+  ]
+}

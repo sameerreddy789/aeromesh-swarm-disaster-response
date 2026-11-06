@@ -1,0 +1,564 @@
+{
+  "schema_version": 1,
+  "status": "Visual research finalized; 16 substantive sources inspected; source-cache integrity and offline concept checked. Recommendations only; nominal-run qualification remains separate.",
+  "created_utc": "2026-11-06T02:45:45+00:00",
+  "scope": "visualization, human factors, evidence communication and demonstration; recommendations only",
+  "authority_rule": "Supplied UAV-X documents govern. Other competitions are explicit analogies, not requirements. Source code and verified run artifacts establish implementation status.",
+  "sources": [
+    {
+      "id": "V01",
+      "title": "Human Interaction With Robot Swarms: A Survey",
+      "url": "https://eprints.whiterose.ac.uk/id/eprint/90476/8/Human%20interaction%20with%20robot%20swarms.pdf",
+      "authors_or_organization": [
+        "Andreas Kolling",
+        "Phillip Walker",
+        "Nilanjan Chakraborty",
+        "Katia Sycara",
+        "Michael Lewis"
+      ],
+      "publication_date": "2016-02 (journal issue); online 2015-10-15",
+      "source_type": "Peer-reviewed survey; institutional accepted manuscript",
+      "retrieved_utc": "2026-11-06T02:39:37+00:00",
+      "retrieval_method": "Agent Reach web route: Jina Reader",
+      "content_access": "substantive full text inspected",
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\hsi-full.txt",
+      "cache_sha256": "b81580dcdfb68474a2c3abf72e32b118c1333bd80b64d72da798ec052990c99e",
+      "evidence_locations": [
+        "Sections III-A, III-B and III-C; manuscript pages 5-8"
+      ],
+      "supported_claims": [
+        "Per-robot supervision can scale with fleet size, while task-level interaction can reduce individual management when coordination is autonomous.",
+        "Remote swarm supervision is limited by bandwidth, latency, asynchrony and incomplete state.",
+        "Reduced-dimensional swarm displays showed benefits in some early studies, but understanding dynamics and exceptions remains an open problem."
+      ],
+      "relevance_to_aeromesh": "Justifies an overview plus selected-vehicle details and explicit state freshness; helps prevent a 30-panel telemetry wall.",
+      "confidence": "high for quoted/paraphrased source claims; application recommendations require AeroMesh testing",
+      "limitations": [
+        "Survey of studies available around 2015, not evidence that one interface fits every swarm.",
+        "Much reviewed work concerns foraging/flocking, not 30 aerial relays with image deadlines.",
+        "Repository HTTP modified timestamp in 2026 is not publication date. DOI: 10.1109/THMS.2015.2480801."
+      ]
+    },
+    {
+      "id": "V02",
+      "title": "Human Influence of Robotic Swarms with Bandwidth and Localization Issues",
+      "url": "https://faculty.cs.byu.edu/~mike/mikeg/papers/06377723.pdf",
+      "authors_or_organization": [
+        "S. Nunnally",
+        "P. Walker",
+        "A. Kolling",
+        "N. Chakraborty",
+        "M. Lewis",
+        "K. Sycara",
+        "M. Goodrich"
+      ],
+      "publication_date": "2012-10",
+      "source_type": "Peer-reviewed empirical conference paper; author/institution copy",
+      "retrieved_utc": "2026-11-06T02:43:15+00:00",
+      "retrieval_method": "Agent Reach web route: Jina Reader",
+      "content_access": "substantive full text inspected",
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\walker-bandwidth-full.txt",
+      "cache_sha256": "b40abc82dcd51052028b6d6ffc9b8253a312dcd9d3b531235ab42ebd30083237",
+      "evidence_locations": [
+        "Sections III-VI; printed pages 335-338"
+      ],
+      "supported_claims": [
+        "Twenty-five participants controlled thirty virtual robots in three within-subject bandwidth conditions.",
+        "A timely aggregate display performed comparably to the high-bandwidth condition on the specified open-world foraging task; the low-bandwidth condition performed worse.",
+        "The authors explicitly note task simplification and a possible ceiling effect that could hide a difference between medium and high bandwidth."
+      ],
+      "relevance_to_aeromesh": "Supports testing aggregate status plus exception detail, and prioritizing data age over decorative per-agent detail.",
+      "confidence": "high for quoted/paraphrased source claims; application recommendations require AeroMesh testing",
+      "limitations": [
+        "Statistical nonsignificance is not an equivalence proof.",
+        "Ground-robot simulation, simplified open environment and six targets; cannot claim validated UAV-X interface performance.",
+        "Aggregates must not conceal a disconnected relay or individually depleted vehicle. DOI: 10.1109/ICSMC.2012.6377723."
+      ]
+    },
+    {
+      "id": "V03",
+      "title": "The Eyes Have It: A Task by Data Type Taxonomy for Information Visualizations",
+      "url": "https://www.cs.umd.edu/~ben/papers/Shneiderman1996eyes.pdf",
+      "authors_or_organization": [
+        "Ben Shneiderman"
+      ],
+      "publication_date": "1996",
+      "source_type": "Primary information-visualization paper; author copy",
+      "retrieved_utc": "2026-11-06T02:31:42+00:00",
+      "retrieval_method": "Agent Reach web route: Jina Reader",
+      "content_access": "substantive full text inspected",
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\umd-overview.txt",
+      "cache_sha256": "e29a529c5696866c6f79c1b8bf8de3a28fc6db385e5381ef3f4daaba38c8c584",
+      "evidence_locations": [
+        "Abstract and task taxonomy"
+      ],
+      "supported_claims": [
+        "The taxonomy identifies overview, zoom, filter, details-on-demand, relate, history and extract as common visualization tasks.",
+        "The overview/zoom/filter/details formulation is presented as a starting point for interface design."
+      ],
+      "relevance_to_aeromesh": "Supports stable eagle overview, selection, route filtering, close-up and event history rather than permanently displaying every diagnostic.",
+      "confidence": "high for quoted/paraphrased source claims; application recommendations require AeroMesh testing",
+      "limitations": [
+        "General visualization taxonomy; not a controlled proof for this drone interface.",
+        "Does not imply full topology should be hidden under all tasks."
+      ]
+    },
+    {
+      "id": "V04",
+      "title": "QGroundControl User Guide: Fly View",
+      "url": "https://docs.qgroundcontrol.com/master/en/qgc-user-guide/fly_view/fly_view.html",
+      "authors_or_organization": [
+        "QGroundControl project"
+      ],
+      "publication_date": "undated; live master documentation retrieved 2026-11-06",
+      "source_type": "Official operational UI documentation",
+      "retrieved_utc": "2026-11-06T02:31:41+00:00",
+      "retrieval_method": "Agent Reach web route: Jina Reader",
+      "content_access": "substantive full text inspected",
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\qgc-fly.txt",
+      "cache_sha256": "eaf48c78600db3d056f5d957b2b6e1b66d154e8485d3d3ac62e7186b308a4b54",
+      "evidence_locations": [
+        "Fly View; map/video; vehicle status and instruments"
+      ],
+      "supported_claims": [
+        "Fly View provides a map with connected vehicles and mission information, a video view, status indicators and configurable instruments."
+      ],
+      "relevance_to_aeromesh": "A concrete precedent for map context plus focused camera/telemetry rather than thirty simultaneous video streams.",
+      "confidence": "high for quoted/paraphrased source claims; application recommendations require AeroMesh testing",
+      "limitations": [
+        "Product documentation describes QGroundControl behavior, not comparative usability evidence.",
+        "Do not import QGC controls or imply AeroMesh already uses MAVLink/QGC."
+      ]
+    },
+    {
+      "id": "V05",
+      "title": "Clock and Time",
+      "url": "https://design.ros2.org/articles/clock_and_time.html",
+      "authors_or_organization": [
+        "Tully Foote / ROS 2 design"
+      ],
+      "publication_date": "2018-07 as Date Written field",
+      "source_type": "Official design article",
+      "retrieved_utc": "2026-11-06T02:31:42+00:00",
+      "retrieval_method": "Agent Reach web route: Jina Reader",
+      "content_access": "substantive full text inspected",
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\ros-time.txt",
+      "cache_sha256": "421463eabc3a7310cf9e7efe4e6b9f2e20f4909f878bd50030287caa63020d69",
+      "evidence_locations": [
+        "Time abstractions; simulated time; challenges; no advanced estimating clock by default"
+      ],
+      "supported_claims": [
+        "Simulation/replay time can run faster or slower than wall time, pause, or jump backward.",
+        "System, steady and ROS clocks serve different needs; clock jumps need explicit handling."
+      ],
+      "relevance_to_aeromesh": "Defines mission age, physics observation time, wall-heartbeat staleness and replay-epoch handling for a truthful live/replay dashboard.",
+      "confidence": "high for quoted/paraphrased source claims; application recommendations require AeroMesh testing",
+      "limitations": [
+        "AeroMesh is not required to adopt ROS 2.",
+        "The page contains inconsistent historical Date Written/Last Modified metadata; record the explicit author date only.",
+        "ROS uninitialized-time semantics must not be copied onto AeroMesh legitimate t=0."
+      ]
+    },
+    {
+      "id": "V06",
+      "title": "ROS 2 Jazzy: About Quality of Service settings",
+      "url": "https://github.com/ros2/ros2_documentation/blob/jazzy/source/Concepts/Intermediate/About-Quality-of-Service-Settings.rst",
+      "authors_or_organization": [
+        "ROS 2 documentation contributors"
+      ],
+      "publication_date": "undated; Jazzy branch inspected 2026-11-06",
+      "source_type": "Official documentation source",
+      "retrieved_utc": "2026-11-06T02:35:12+00:00",
+      "retrieval_method": "GitHub CLI official raw source",
+      "content_access": "substantive full text inspected",
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\ros-qos-source.rst",
+      "cache_sha256": "b8ba5fd852659bbff90aacbf3bd0f126b8e068bac5d7d7b808eab2fc83337420",
+      "evidence_locations": [
+        "QoS policies: deadline, lifespan, liveliness; QoS events"
+      ],
+      "supported_claims": [
+        "Deadline is expected inter-publication duration; lifespan marks a message too old between publication and reception.",
+        "Liveliness/lease duration concerns whether a publisher still indicates it is alive.",
+        "A reliable policy and compatible QoS do not by themselves define application-level image completion or its deadline."
+      ],
+      "relevance_to_aeromesh": "Keep link availability, heartbeat freshness, message age, complete image receipt and payload deadline separate in the UI.",
+      "confidence": "high for quoted/paraphrased source claims; application recommendations require AeroMesh testing",
+      "limitations": [
+        "Terminology/design analogy only: AeroMesh does not thereby have DDS semantics.",
+        "Do not use the document reliability wording as proof of delivery under permanent disconnection."
+      ]
+    },
+    {
+      "id": "V07",
+      "title": "Web Content Accessibility Guidelines (WCAG) 2.2",
+      "url": "https://www.w3.org/TR/WCAG22/",
+      "authors_or_organization": [
+        "W3C Accessibility Guidelines Working Group"
+      ],
+      "publication_date": "current recommendation text; response modified 2024-12-12",
+      "source_type": "W3C Recommendation",
+      "retrieved_utc": "2026-11-06T02:31:42+00:00",
+      "retrieval_method": "Agent Reach web route: Jina Reader",
+      "content_access": "substantive full text inspected",
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\wcag.txt",
+      "cache_sha256": "4d4b57e53f12f008a1499d302fae8bca1494be06eb18a06d9836d0225cfb7607",
+      "evidence_locations": [
+        "Success criteria 1.4.1, 1.4.3 and 1.4.11"
+      ],
+      "supported_claims": [
+        "Color must not be the sole means of distinguishing status.",
+        "Minimum text contrast is generally 4.5:1, with 3:1 for large text; meaningful non-text components generally require 3:1 against adjacent colors, subject to stated exceptions."
+      ],
+      "relevance_to_aeromesh": "Use shape, text, line pattern and adequate contrast for scout/relay/failure/stale states; test at final video resolution.",
+      "confidence": "high for quoted/paraphrased source claims; application recommendations require AeroMesh testing",
+      "limitations": [
+        "Web accessibility criteria are transferable guidance here, not an asserted Indian aviation rule or proof of native-app WCAG conformance.",
+        "Captioning, keyboard interaction and cognitive accessibility need their own review; this ledger does not certify compliance."
+      ]
+    },
+    {
+      "id": "V08",
+      "title": "Foxglove documentation: 3D panel",
+      "url": "https://docs.foxglove.dev/docs/visualization/panels/3d",
+      "authors_or_organization": [
+        "Foxglove"
+      ],
+      "publication_date": "undated; live documentation retrieved 2026-11-06",
+      "source_type": "Official visualization documentation",
+      "retrieved_utc": "2026-11-06T02:34:13+00:00",
+      "retrieval_method": "Agent Reach web route: Jina Reader",
+      "content_access": "substantive full text inspected",
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\foxglove-3d.txt",
+      "cache_sha256": "ebe62ad56339566ba71b01ba4ecc55d5deeb881eb0cfaaccc4ae762a9dd10ea0",
+      "evidence_locations": [
+        "Visualization timestamps; frame settings; follow mode; topics; timestamp synchronization"
+      ],
+      "supported_claims": [
+        "Messages arrive in log-time order but objects are displayed using their own timestamps and appropriate transforms, not merely receive time.",
+        "Fixed/display frames and pose/heading/position/off camera-follow modes express distinct reference choices.",
+        "Topics can be selectively displayed; exact timestamp synchronization buffers data until participating topics match."
+      ],
+      "relevance_to_aeromesh": "Keep world frame, observation time, receipt time and selected view explicit; synchronize without silently treating stale transforms as current.",
+      "confidence": "high for quoted/paraphrased source claims; application recommendations require AeroMesh testing",
+      "limitations": [
+        "Describes Foxglove, not a requirement to install it.",
+        "Exact timestamp synchronization could block a multi-rate AeroMesh display; the recommendation is explicit bounded alignment, not blind adoption.",
+        "Vendor performance numbers are not transferable to this Windows machine or viewer."
+      ]
+    },
+    {
+      "id": "V09",
+      "title": "PX4 User Guide: Log Analysis using Flight Review",
+      "url": "https://docs.px4.io/main/en/log/flight_review",
+      "authors_or_organization": [
+        "PX4 project"
+      ],
+      "publication_date": "undated; main documentation retrieved 2026-11-06",
+      "source_type": "Official flight-log diagnostic guide",
+      "retrieved_utc": "2026-11-06T02:34:12+00:00",
+      "retrieval_method": "Agent Reach web route: Jina Reader",
+      "content_access": "substantive full text inspected",
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\px4-review.txt",
+      "cache_sha256": "acd356ff710c865f8954dec5e6b09f03cc957e7c02af9136932ad09c0f0f2eb3",
+      "evidence_locations": [
+        "General chart interpretation; PID Tracking Performance; Actuator Outputs"
+      ],
+      "supported_claims": [
+        "Flight modes provide context when interpreting time plots.",
+        "Tracking is assessed by comparing estimates with relevant setpoints, with the relevant quantities depending on flight mode.",
+        "Actuator outputs and imbalances can expose problems beyond a visually smooth trajectory."
+      ],
+      "relevance_to_aeromesh": "For a brief physics close-up pair actual position/velocity/thrust with commanded targets and mode; reserve limits should have units and context.",
+      "confidence": "high for quoted/paraphrased source claims; application recommendations require AeroMesh testing",
+      "limitations": [
+        "PX4 tuning thresholds and PWM examples are platform-specific and must not be copied as Bullet validation criteria.",
+        "AeroMesh currently uses direct simulated state, not a flight-qualified estimator; label that difference."
+      ]
+    },
+    {
+      "id": "V10",
+      "title": "Standard Test Methods for Response Robots",
+      "url": "https://www.nist.gov/el/intelligent-systems-division-73500/standard-test-methods-response-robots",
+      "authors_or_organization": [
+        "NIST Intelligent Systems Division; Adam Jacoff project lead"
+      ],
+      "publication_date": "2016-11-08; updated 2024-08-16",
+      "source_type": "Official measurement-program description",
+      "retrieved_utc": "2026-11-06T02:31:41+00:00",
+      "retrieval_method": "Agent Reach web route: Jina Reader",
+      "content_access": "substantive full text inspected",
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\nist-robots.txt",
+      "cache_sha256": "472407f388df6bbfe2733c26583af62ba20b281aa6cd25ecc33c0d1ffb17f1a3",
+      "evidence_locations": [
+        "Main programme description"
+      ],
+      "supported_claims": [
+        "Response-robot capability measurement spans mobility, sensing, energy, communication, operator proficiency, logistics and safety.",
+        "The stated objective is quantitative comparisons based on statistically significant capability data; competitions and responder exercises help refine/validate methods."
+      ],
+      "relevance_to_aeromesh": "Organize the demonstration around measurable claims and evidence, with a reproducible benchmark next to the video.",
+      "confidence": "high for quoted/paraphrased source claims; application recommendations require AeroMesh testing",
+      "limitations": [
+        "Not a certification of AeroMesh and not a UAV-X rubric.",
+        "The project page does not provide a universal sample-size prescription."
+      ]
+    },
+    {
+      "id": "V11",
+      "title": "NIST Aerial Drone Tests: Simulation",
+      "url": "https://www.nist.gov/el/intelligent-systems-division-73500/standard-test-methods-response-robots/aerial-drone-tests-8",
+      "authors_or_organization": [
+        "NIST Intelligent Systems Division"
+      ],
+      "publication_date": "2022-08-03; updated 2023-02-03",
+      "source_type": "Official simulation/training guidance",
+      "retrieved_utc": "2026-11-06T02:41:13+00:00",
+      "retrieval_method": "Agent Reach web route: Jina Reader",
+      "content_access": "substantive full text inspected",
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\nist-simulation.txt",
+      "cache_sha256": "59d50de4f2aa6998987ed449c0e3b69baeadbd32acc15ae13d58ebad37831786",
+      "evidence_locations": [
+        "Main Simulation section; technical details"
+      ],
+      "supported_claims": [
+        "Simulation supports low-cost familiarization and practicing limits, while real-aircraft practice/testing remains necessary.",
+        "NIST offers test apparatus models to support simulation and evaluation."
+      ],
+      "relevance_to_aeromesh": "Supports small structured procedural test fixtures and explicit simulation limits while deferring the city.",
+      "confidence": "high for quoted/paraphrased source claims; application recommendations require AeroMesh testing",
+      "limitations": [
+        "Remote-pilot training context, not autonomous-swarm validation.",
+        "No NIST assets were downloaded or integrated; availability is a research option only."
+      ]
+    },
+    {
+      "id": "V12",
+      "title": "DARPA Subterranean Challenge Competition Rules: Final Event, Revision 1",
+      "url": "https://www.darpa.mil/sites/default/files/SubT_Challenge_Finals_Rules.pdf",
+      "authors_or_organization": [
+        "DARPA"
+      ],
+      "publication_date": "2021-05-25",
+      "source_type": "Official published rules for a different competition",
+      "retrieved_utc": "2026-11-06T02:36:14+00:00",
+      "retrieval_method": "Agent Reach web route: Jina Reader",
+      "content_access": "substantive full text inspected",
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\subt-finals.txt",
+      "cache_sha256": "c16d92bc4de2762f4d039235435d2a784003b9dfc7f39f84635d808600e0316f",
+      "evidence_locations": [
+        "Sections 7.6, 9.1.6, 9.4.1-9.4.2 and 10.1-10.4"
+      ],
+      "supported_claims": [
+        "The virtual competition requires its RF interfaces for inter-platform communication and artifact reporting; logs enable replay and adjudication.",
+        "Artifact scores depend on valid reports received at the command post, and report receipt time is used for time-based comparisons regardless of original detection time.",
+        "The rules distinguish mapping for visualization/validation, report correctness, report limits and timed ranking."
+      ],
+      "relevance_to_aeromesh": "A strong published analogy for showing the complete detection-to-base-station evidence chain and preserving report timestamps.",
+      "confidence": "high for quoted/paraphrased source claims; application recommendations require AeroMesh testing",
+      "limitations": [
+        "These are SubT rules, not UAV-X requirements; do not transfer five-metre accuracy, report caps or score weights.",
+        "The May 2021 document date governs; HTTP modified 2026 is not the rule date."
+      ]
+    },
+    {
+      "id": "V13",
+      "title": "Competition Rules | SUAS 2021",
+      "url": "https://suas-competition.org/s/auvsi_suas-2021-rules.pdf",
+      "authors_or_organization": [
+        "AUVSI Seafarer Chapter"
+      ],
+      "publication_date": "2021 competition rules (retrieved official historical copy)",
+      "source_type": "Official published rules for a different competition",
+      "retrieved_utc": "2026-11-06T02:39:10+00:00",
+      "retrieval_method": "Agent Reach web route: Jina Reader",
+      "content_access": "substantive full text inspected",
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\suas-2021-rules.txt",
+      "cache_sha256": "7d6db2384b57836554e554eeadbfa1c171491069aaf6e7dec88d6566dc40c54b",
+      "evidence_locations": [
+        "Overview; Technical Design Paper; Flight Readiness Review; Mission Testing"
+      ],
+      "supported_claims": [
+        "The rubric separates mission demonstration (60%), technical design (20%) and flight readiness review (20%).",
+        "Readiness presentation is explicitly supported by testing data, planned/omitted tasks, performance statistics and full mission tests.",
+        "The rules ask teams to discuss flaws found, corrective actions and estimated scores from mission tests."
+      ],
+      "relevance_to_aeromesh": "A concrete precedent for separating edited explanatory video, evidence appendix and live execution, while reporting failures and scope.",
+      "confidence": "high for quoted/paraphrased source claims; application recommendations require AeroMesh testing",
+      "limitations": [
+        "Historical competition; the current SUAS homepage refers to other years.",
+        "Do not import its page count, video duration, resolution, physical-flight proof, score weights or submission method into UAV-X."
+      ]
+    },
+    {
+      "id": "V14",
+      "title": "Four Principles of Explainable Artificial Intelligence (NISTIR 8312)",
+      "url": "https://nvlpubs.nist.gov/nistpubs/ir/2021/NIST.IR.8312.pdf",
+      "authors_or_organization": [
+        "P. Jonathon Phillips",
+        "Carina A. Hahn",
+        "Peter C. Fontana",
+        "Amy N. Yates",
+        "Kristen Greene",
+        "David A. Broniatowski",
+        "Mark A. Przybocki"
+      ],
+      "publication_date": "2021-09",
+      "source_type": "NIST technical report",
+      "retrieved_utc": "2026-11-06T02:41:13+00:00",
+      "retrieval_method": "Agent Reach web route: Jina Reader",
+      "content_access": "substantive full text inspected",
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\nist-explainability.txt",
+      "cache_sha256": "699c5f34162d36ea6d111fae01e9b08d17ebb0b9912aa455f24a711cc2139d25",
+      "evidence_locations": [
+        "Sections 2.1-2.4 and 3"
+      ],
+      "supported_claims": [
+        "Explanations should provide evidence/reasons, be meaningful to their intended audience, accurately reflect the process, and acknowledge knowledge limits.",
+        "Explanation accuracy differs from decision accuracy.",
+        "Detail and form should depend on the audience and purpose."
+      ],
+      "relevance_to_aeromesh": "Render decision explanations from recorded planner reasons and constraints; show unknown reasons honestly instead of generating plausible stories.",
+      "confidence": "high for quoted/paraphrased source claims; application recommendations require AeroMesh testing",
+      "limitations": [
+        "General principles, not a validated AeroMesh UI or a demand to add machine learning.",
+        "A faithful explanation can still explain a wrong decision; it is not a substitute for mission validation. DOI: 10.6028/NIST.IR.8312."
+      ]
+    },
+    {
+      "id": "V15",
+      "title": "NASA Task Load Index (TLX)",
+      "url": "https://www.nasa.gov/human-systems-integration-division/nasa-task-load-index-tlx/",
+      "authors_or_organization": [
+        "NASA Human Systems Integration Division; original tool by Sandra Hart"
+      ],
+      "publication_date": "page 2026-03-03; updated 2026-03-11; instrument originated in 1980s",
+      "source_type": "Official workload-assessment guidance",
+      "retrieved_utc": "2026-11-06T02:43:17+00:00",
+      "retrieval_method": "Agent Reach web route: Jina Reader",
+      "content_access": "substantive full text inspected",
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\nasa-tlx-current.txt",
+      "cache_sha256": "b85f5233922f32efe6b532639388d49ba20a6ab734be20b55650b08fae106e91",
+      "evidence_locations": [
+        "Main tool description; paper-and-pencil guidance; publications"
+      ],
+      "supported_claims": [
+        "NASA-TLX assesses subjective workload across six dimensions: mental, physical and temporal demand, performance, effort and frustration.",
+        "The standard procedure derives a weighted workload score and requires correct use of the manual."
+      ],
+      "relevance_to_aeromesh": "Optional second-stage workload measure for comparing display variants alongside objective error/comprehension times.",
+      "confidence": "high for quoted/paraphrased source claims; application recommendations require AeroMesh testing",
+      "limitations": [
+        "Subjective workload is not mission correctness or situation-awareness accuracy.",
+        "The page labels itself historical/not actively maintained.",
+        "Do not claim a NASA-TLX study was run; any team pilot test needs proper procedure and clearly limited sample claims."
+      ]
+    },
+    {
+      "id": "V16",
+      "title": "Age of Information: An Introduction and Survey",
+      "url": "https://arxiv.org/abs/2007.08564",
+      "full_text_url": "https://arxiv.org/pdf/2007.08564",
+      "authors_or_organization": [
+        "Roy D. Yates",
+        "Yin Sun",
+        "D. Richard Brown III",
+        "Sanjit K. Kaul",
+        "Eytan Modiano",
+        "Sennur Ulukus"
+      ],
+      "publication_date": "2020-07-16 arXiv v1; version metadata verified on abstract page",
+      "source_type": "Author preprint of scholarly survey",
+      "retrieved_utc": "2026-11-06T02:49:27Z",
+      "retrieval_method": "Agent Reach web/Jina for full text; direct public arXiv abstract HTML for version metadata",
+      "content_access": "Sections I-III inspected; full text retrieved",
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\aoi-survey.txt",
+      "cache_sha256": "6c08868e68aeeae58fcc6111dd7252d272b8cbdbad00e87f4b750debf9aef25e",
+      "evidence_locations": [
+        "Introduction",
+        "Section II age process definition",
+        "Section III queueing and packet management"
+      ],
+      "supported_claims": [
+        "Age at a recipient is current time minus generation time of the freshest received update.",
+        "Minimizing delivered-update delay and maximizing utilization are not equivalent to minimizing age.",
+        "Sending too frequently can create backlog, while sending too infrequently leaves state outdated."
+      ],
+      "relevance_to_aeromesh": "Display state age and stale intervals independently of packet delivery latency; preserve the freshest valid source observation under out-of-order delivery.",
+      "confidence": "High for the formal age definition and distinctions; scheduling policy must be benchmarked in AeroMesh.",
+      "limitations": [
+        "Simplified queueing examples are not proof of an optimal 30-UAV policy.",
+        "Shared clocks/source timestamps and an explicit run epoch are prerequisites.",
+        "AoI does not replace image completion deadlines or semantic validity of the received content.",
+        "HTTP modified time was not used as the publication date."
+      ]
+    }
+  ],
+  "access_limited_or_rejected": [
+    {
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\hsi-pitt.txt",
+      "reason": "Old Pittsburgh manuscript URL returned 404; replaced by verified White Rose manuscript."
+    },
+    {
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\ros-qos.txt",
+      "reason": "404; not a source."
+    },
+    {
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\ros-qos-jazzy.txt",
+      "reason": "Anubis challenge; replaced by official GitHub source."
+    },
+    {
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\suas-2026.txt",
+      "reason": "Guessed 2026 URL returned 404; only the verified historical 2021 rules support claims."
+    },
+    {
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\nasa-hidh.txt",
+      "reason": "Guessed NASA HIDH URL returned 404."
+    },
+    {
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\nasa-standard.txt",
+      "reason": "Guessed NASA standard URL returned 404."
+    },
+    {
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\sa-author.txt",
+      "reason": "Guessed author URL returned 404."
+    },
+    {
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\sa-publications.txt",
+      "reason": "Guessed author publications URL returned 404."
+    },
+    {
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\trust-pubmed.txt",
+      "reason": "Browser/CAPTCHA page, not abstract content."
+    },
+    {
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\automation-pubmed.txt",
+      "reason": "Browser/CAPTCHA page, not abstract content."
+    },
+    {
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\sat-report.txt",
+      "reason": "DTIC maintenance page; no substantive report inspected."
+    },
+    {
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\nasa-tlx.txt",
+      "reason": "Old NASA host timed out; replaced by current official page."
+    },
+    {
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\nist-aerial.txt",
+      "reason": "Navigation-only reader extraction; direct HTML proved this is a landing/link page, not detailed standards."
+    },
+    {
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\nist-levels.txt",
+      "reason": "Navigation-only extraction; no body claim adopted."
+    },
+    {
+      "cache_file": "C:\\Users\\samee\\AppData\\Local\\Temp\\aeromesh-visual-research-20261106\\faa-hfds.txt",
+      "reason": "Landing citation only; detailed standard not inspected, so no alarm/display clauses claimed."
+    }
+  ],
+  "additional_discovery_only": [
+    "Crossref/OpenAlex/Semantic Scholar metadata for Endsley 1995, Lee and See 2004, Parasuraman et al. 2000 and Chen et al. 2011 were used for discovery; no uninspected full-text result is claimed.",
+    "DVRP-MHSI: Dynamic Visualization Research Platform for Multimodal Human-Swarm Interaction, arXiv:2408.10861, v1 2024-08-20. Abstract only inspected; wheeled-robot hardware demonstration. No full-paper claim adopted."
+  ],
+  "retrieval_timestamp_note": "Retrieved UTC is the local cache write completion time; server Last-Modified dates were not treated as publication dates.",
+  "finalized_utc": "2026-11-06T05:30:36.463365+00:00"
+}

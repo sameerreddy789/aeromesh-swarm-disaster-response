@@ -1,0 +1,15 @@
+{
+  "schema_version": "aeromesh-bullet-verification-1",
+  "evidence_valid": true,
+  "evidence_errors": [],
+  "failed_constraints": [
+    "continuous_connectivity"
+  ],
+  "mission_passed": false,
+  "submission_ready": false,
+  "notes": [
+    "Integrity and recorded-state consistency, not independent continuous dynamics proof.",
+    "Body telemetry is 1 Hz; mission safety is 20 Hz; engine extrema/contacts aggregate fixed substeps.",
+    "No kinematic qualification, calibrated airframe, physical battery or hardware qualification is inferred."
+  ]
+}

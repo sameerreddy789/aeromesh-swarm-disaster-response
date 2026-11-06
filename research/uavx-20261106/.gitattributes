@@ -1,0 +1,6 @@
+# Preserve observed bytes and frozen probe hashes across clones.
+*.json -text -eol
+*.jsonl -text -eol
+*.html -text -eol
+*.py -text -eol
+*.svg text eol=lf

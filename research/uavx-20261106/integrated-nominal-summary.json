@@ -1,0 +1,224 @@
+{
+  "seed": 42,
+  "fleet_size": 30,
+  "completion_time_s": 2514.0,
+  "elapsed_time_s": 2514.0,
+  "pois_completed": 10,
+  "pois_total": 10,
+  "minimum_separation_m": 20.36787334035388,
+  "maximum_speed_mps": 3.9955583658691203,
+  "maximum_altitude_m": 99.00714111328125,
+  "maximum_sortie_s": 876.1999999997508,
+  "communication_downtime_s": 19.8,
+  "battery_exhaustions": 0,
+  "collision_count": 0,
+  "checks": {
+    "all_pois_surveyed_and_reported": true,
+    "sample_has_ten_pois": true,
+    "all_uavs_landed": true,
+    "mission_deadline": true,
+    "endurance": true,
+    "speed": true,
+    "altitude": true,
+    "separation": true,
+    "geofence": true,
+    "no_battery_exhaustion": true,
+    "continuous_connectivity": false,
+    "reporting_deadline": true,
+    "scheduled_faults_exercised": true,
+    "imagery_received": true,
+    "no_body_collision": true
+  },
+  "sample_constraints_passed": false,
+  "source_stable": true,
+  "reporting_deadline_misses": [],
+  "scope": "Completed team-authored nominal Bullet scenario; not hidden/fault matrix or airframe qualification",
+  "summarized_utc": "2026-11-06T05:54:47.298971+00:00",
+  "evidence_folder": "D:\\Hackathons\\Projects\\Web Dev\\New\\AeroMesh-UAVX\\evidence\\research-physics-nominal-20261106-01",
+  "source_sha256": {
+    "simulation/uavx.py": "faf695035c6ab20c3b9035c8abdbba50d251b4b6951efcadfa696f877b9b63ae",
+    "core/mission_safety.py": "25b8f8b50baf62de30beaf3aeecdeaebdb33b428a4a37b8b90525b3716d5f61c",
+    "core/models.py": "3d3555c0efb60e5567071886fba5ccb43f9731812cef86f0f1ec33281e19a64c",
+    "core/config.py": "eb0af1755fdf169e9ff6d90a1caf0c3a0b984b9d2c5fa044f0048597f7dff618",
+    "comm/mesh_router.py": "31ff5888dc11779edab0c1185b0eac2abe4e9d5510432d840567074340983b87",
+    "comm/channel.py": "60c0e281784e9e35259d6116d33c6f296a384b22978d666ed702f21b9a6283b7",
+    "comm/channel_legacy.py": "dae562c24c002974108418b53baa56ba8aed909a997face56fe448e7bd56989c",
+    "run_simulation.py": "4e10332c8e6d2d67474b8f28816d101911603ff8e339621a3bacc5bf2e2b3547",
+    "simulation/resilient_uavx.py": "c7edda669645edcb82d1e6d5df7445a79d0ec40e5a9c5475ff3915afc4baf7a5",
+    "simulation/uavx_scenario.py": "1f3af1d445eb8b9948f24213765ab4f9ddc3a424539830d4a67554aaf49ec7fd",
+    "simulation/camera_sensor.py": "a52096b75e17e1392e5cfc097e87e3dcd9743231e151d4f2a0c0146a739e51c0",
+    "simulation/physics_uavx.py": "0b8085967e602f8a6ca5f37a7c35bcf9ebb22d1ccdc96f07fc6186bf7f675343",
+    "simulation/quadrotor_physics.py": "b81c3003f0a3845c17f3779d5396f422f37204ad56a9296138490a44dcc61074",
+    "simulation/physics_planning.py": "0d777f0d7d6493e58efa661e7aa5a2b1ac1520f30d99f69899bdbc28d62460d5",
+    "run_physics.py": "f43d8197f8c2c1d346149b105a64b51fb6fbf2e0118469ade810f8c81f9b0987"
+  },
+  "manifest_sha256": "a05b676a2ce4783d2d467800a6a87be4669697d3c3094fd2c5786c107508b25f",
+  "distinct_launched_uavs": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29
+  ],
+  "never_launched_count": 0,
+  "peak_sampled_active": 28,
+  "verification": {
+    "schema_version": "aeromesh-bullet-verification-1",
+    "evidence_valid": true,
+    "evidence_errors": [],
+    "failed_constraints": [
+      "continuous_connectivity"
+    ],
+    "mission_passed": false,
+    "submission_ready": false,
+    "notes": [
+      "Integrity and recorded-state consistency, not independent continuous dynamics proof.",
+      "Body telemetry is 1 Hz; mission safety is 20 Hz; engine extrema/contacts aggregate fixed substeps.",
+      "No kinematic qualification, calibrated airframe, physical battery or hardware qualification is inferred."
+    ]
+  },
+  "scenario": {
+    "schema_version": 1,
+    "seed": 42,
+    "fleet_size": 30,
+    "packet_loss": 0.02,
+    "relay_protection": true,
+    "radio_bytes_per_s": 131072.0,
+    "radio_queue_bytes": 1048576,
+    "recharge_s": 720.0,
+    "charging_pads": 30,
+    "staging_columns": 6,
+    "pad_spacing_m": 25.0,
+    "camera_mode": "panda3d",
+    "camera_width": 128,
+    "camera_height": 128,
+    "tasks": [
+      {
+        "id": 0,
+        "position": [
+          714.4267984578837,
+          -474.98924477733306,
+          0.0
+        ],
+        "spawn_s": 0.0,
+        "priority": 1.0
+      },
+      {
+        "id": 1,
+        "position": [
+          350.02931836911927,
+          -276.78926185117723,
+          0.0
+        ],
+        "spawn_s": 1341.4599126453816,
+        "priority": 1.0
+      },
+      {
+        "id": 2,
+        "position": [
+          751.6994874229113,
+          392.17956770484545,
+          0.0
+        ],
+        "spawn_s": 211.27356877518412,
+        "priority": 1.0
+      },
+      {
+        "id": 3,
+        "position": [
+          496.9218196852704,
+          -470.20278056192967,
+          0.0
+        ],
+        "spawn_s": 440.43007615826986,
+        "priority": 1.0
+      },
+      {
+        "id": 4,
+        "position": [
+          580.3552881033625,
+          -473.46403031613636,
+          0.0
+        ],
+        "spawn_s": 405.9775121947684,
+        "priority": 1.0
+      },
+      {
+        "id": 5,
+        "position": [
+          724.8844377795232,
+          44.94148060321663,
+          0.0
+        ],
+        "spawn_s": 443.56668235081224,
+        "priority": 1.0
+      },
+      {
+        "id": 6,
+        "position": [
+          664.2656838759087,
+          309.43045667782667,
+          0.0
+        ],
+        "spawn_s": 71.30784183982617,
+        "priority": 1.0
+      },
+      {
+        "id": 7,
+        "position": [
+          880.8192518328079,
+          198.13939498822685,
+          0.0
+        ],
+        "spawn_s": 652.0358987413059,
+        "priority": 1.0
+      },
+      {
+        "id": 8,
+        "position": [
+          230.47949981178155,
+          457.21307220678125,
+          0.0
+        ],
+        "spawn_s": 645.6745084959706,
+        "priority": 1.0
+      },
+      {
+        "id": 9,
+        "position": [
+          167.7458433801479,
+          -403.283623166536,
+          0.0
+        ],
+        "spawn_s": 1534.64019744458,
+        "priority": 5.0
+      }
+    ],
+    "faults": []
+  }
+}
